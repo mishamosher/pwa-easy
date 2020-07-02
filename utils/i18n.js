@@ -1,4 +1,4 @@
-import FetchInterceptor from "./fetch-interceptor.js";
+import FetchInterceptor from "../external/js/esm/fetch-interceptor/fetch-interceptor.js";
 import Vue from "../external/js/esm/vue/vue.esm.browser.js";
 import VueI18n from "../external/js/esm/vue-i18n/vue-i18n.esm.browser.js";
 

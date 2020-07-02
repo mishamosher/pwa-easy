@@ -1,5 +1,5 @@
 import GEmojiElement from "../external/js/esm/gemoji/gemoji.js";
-import FetchInterceptor from "../utils/fetch-interceptor.js";
+import FetchInterceptor from "../external/js/esm/fetch-interceptor/fetch-interceptor.js";
 import I18n from "../utils/i18n.js";
 import Progress from "../external/js/esm/progress/progress.js";
 import Router from "../utils/router.js";
