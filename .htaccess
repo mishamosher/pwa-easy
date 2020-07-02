@@ -1,0 +1,16 @@
+Options -Indexes
+
+RewriteEngine On
+
+RewriteBase /
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Enable "pretty URLs". View service-worker.js for more details. An explanation of the rules below can be found at https://serverfault.com/a/420751
+RewriteCond $1#%{REQUEST_URI} ([^#]*)#(.*?)\1$
+RewriteRule ^(.*)$ %2?sitePath=$1 [R=302,QSA,L]
+
+# Redirect the root index.html to ./
+RewriteCond $1#%{REQUEST_URI} ([^#]*)#(.*?)\1$
+RewriteRule ^(index\.html)$ %2 [R=301,NC,QSA,L]
