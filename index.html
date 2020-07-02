@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+    <title>My site!</title>
+    <style id="styles-temporary">
+        body * {
+            display: none;
+        }
+
+        #app-loading {
+            display: initial;
+            background: url("img/loading.svg") no-repeat center center;
+            margin: auto;
+            width: 50vh;
+            height: 50vh;
+        }
+
+        #app {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <div id="app-loading"></div>
+</div>
+
+<script type="text/x-template" id="app-template"></script>
+
+<script type="module">
+    import './config/globals.js';
+
+    Promise.resolve((async () => {
+        const startApp = async () => {
+            let {default: ControllerIndex} = await import('./controllers/index.js');
+            await ControllerIndex.initialize();
+        };
+
+        if ('serviceWorker' in window.navigator) {
+            const Workbox = 'localhost' === window.location.host
+                ? (await import('./external/js/global/workbox/workbox-window.dev.mjs')).Workbox
+                : (await import('./external/js/global/workbox/workbox-window.prod.mjs')).Workbox;
+
+            const wb = new Workbox('service-worker.js', {updateViaCache: 'none'});
+
+            wb.addEventListener('installed', (event) => {
+                if (event.isUpdate && app) app.showUpdateToast();
+            });
+
+            await wb.register();
+
+            // Workaround for the lack of an 'activated' event. The app requires the ServiceWorker when there is
+            // no internet access. The ServiceWorker also performs various URL rewrites to reduce the network usage.
+            // https://github.com/w3c/ServiceWorker/issues/1222
+            // https://github.com/w3c/ServiceWorker/issues/1247
+            const swr = await window.navigator.serviceWorker.ready;
+            const checkActivated = () => {
+                if (swr.active.state === 'activated') Promise.resolve(startApp());
+                else setTimeout(checkActivated, 0);
+            };
+            setTimeout(checkActivated, 0);
+        } else await startApp(); // fall back to online-only mode
+    })());
+</script>
+</body>
+</html>
