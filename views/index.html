@@ -1,0 +1,75 @@
+<!--
+  Main view of the app. Contains elements that are shared for any other view of the app. Do not use relative URLs here.
+
+  Note that you can use relative URLs on sub-views.
+-->
+
+<v-app>
+    <v-navigation-drawer app clipped v-model="drawer">
+        <v-list-item>
+            <v-list-item-content>
+                <v-list-item-title class="title">
+                    Application
+                </v-list-item-title>
+                <v-list-item-subtitle>
+                    subtext
+                </v-list-item-subtitle>
+            </v-list-item-content>
+        </v-list-item>
+        <v-divider></v-divider>
+        <v-list dense nav>
+            <v-list-item :to="`/${$i18n.locale}/site/demo`">
+                <v-list-item-icon>
+                    <v-icon>fas fa-chalkboard</v-icon>
+                </v-list-item-icon>
+
+                <v-list-item-content>
+                    <v-list-item-title>{{$t('Demo')}}</v-list-item-title>
+                </v-list-item-content>
+            </v-list-item>
+            <v-list-item :to="`/${$i18n.locale}/nowhere`">
+                <v-list-item-icon>
+                    <v-icon>fas fa-mask</v-icon>
+                </v-list-item-icon>
+
+                <v-list-item-content>
+                    <v-list-item-title>{{$t('Nowhere')}}</v-list-item-title>
+                </v-list-item-content>
+            </v-list-item>
+        </v-list>
+    </v-navigation-drawer>
+    <v-app-bar app dense clipped-left hide-on-scroll>
+        <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
+        <v-toolbar-title>App template</v-toolbar-title>
+        <v-spacer></v-spacer>
+        <v-menu offset-y>
+            <template v-slot:activator="{ on, attrs }">
+                <v-btn text v-bind="attrs" v-on="on">
+                    <v-icon left>fas fa-language</v-icon>
+                    <div class="hidden-sm-and-down">{{$t('Language')}}</div>
+                    <v-icon right>fas fa-caret-down</v-icon>
+                </v-btn>
+            </template>
+            <v-list>
+                <v-list-item v-for="(value, key) in siteLanguages" :key="key" :to="`${routeToLanguage(key)}`" @click="changeLanguage(key)">
+                    <v-list-item-title>{{value}}</v-list-item-title>
+                </v-list-item>
+            </v-list>
+        </v-menu>
+    </v-app-bar>
+    <v-main>
+        <v-container fluid>
+            <router-view></router-view>
+        </v-container>
+    </v-main>
+    <v-footer>
+        <v-row align="center" justify="center">
+            <div class="mr-2">
+                <v-img contain height="100%" width="200px" :src="`${$router.history.base}/img/logo-generic.svg`"></v-img>
+            </div>
+            <div>
+                App footer
+            </div>
+        </v-row>
+    </v-footer>
+</v-app>
