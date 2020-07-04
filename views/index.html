@@ -4,7 +4,7 @@
   Note that you can use relative URLs on sub-views.
 -->
 
-<v-app>
+<v-app v-scroll="onScroll">
     <v-navigation-drawer app clipped v-model="drawer">
         <v-list-item>
             <v-list-item-content>
@@ -72,4 +72,20 @@
             </div>
         </v-row>
     </v-footer>
+    <v-scale-transition origin="center">
+        <v-btn
+                v-show="scrollTopVisible"
+                @click="$vuetify.goTo(0)"
+                fab
+                dark
+                bottom
+                right
+                fixed
+                large
+                :title="$t('Go to the top')"
+                color="red"
+        >
+            <v-icon>fas fa-chevron-up</v-icon>
+        </v-btn>
+    </v-scale-transition>
 </v-app>

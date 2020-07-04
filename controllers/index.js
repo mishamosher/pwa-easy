@@ -148,6 +148,9 @@ export default class ControllerIndex {
                             onConfirm: () => window.location.reload()
                         })
                     });
+                },
+                onScroll() {
+                    this.scrollTopVisible = window.pageYOffset > 0;
                 }
             },
             computed: {
@@ -158,7 +161,8 @@ export default class ControllerIndex {
                 }
             },
             data: {
-                drawer: false
+                drawer: false,
+                scrollTopVisible: false
             }
         });
     }

@@ -6,6 +6,7 @@
   "Back to homepage": "Вернуться на главную страницу",
   "Nowhere": "Никуда",
   "Demo": "Показ",
+  "Go to the top": "К началу страницы",
   "$vuetify": {
     "badge": "знак",
     "close": "Закрыть",
