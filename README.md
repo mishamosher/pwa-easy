@@ -53,6 +53,8 @@ Of the **files** in the root directory, only `index.html` and `service-worker.js
 
 ## Libraries and frameworks used (kudos to 'em!)
 
+> JavaScript ES modules
+
 * [VueJS](https://vuejs.org/)
 * [Vue I18n](https://github.com/kazupon/vue-i18n)
 * [Vue Router](https://github.com/vuejs/vue-router)
@@ -61,12 +63,14 @@ Of the **files** in the root directory, only `index.html` and `service-worker.js
 * [emoji-unicode](https://github.com/IonicaBizau/emoji-unicode/)
   * Rewritten as an ES module
 * [fetch-interceptor](https://github.com/itsfadnis/fetch-interceptor/)
-  * Improved, and rewritten as an ES module
-* [OpenMoji SVGs](https://github.com/hfg-gmuend/openmoji/)
+  * Improved and rewritten as an ES module
 * [GEmoji](https://github.com/github/g-emoji-element/)
   * Modified with some improvements and to always use OpenMoji
 * [Progressbar](https://github.com/shashibeit/progressbar/)
-  * Rewritten as an ES Module
+  * Modified and rewritten as an ES Module
+
+> JavaScript globalThis modules
+
 * [Mime](https://github.com/broofa/mime/)
   * Rewritten as single file class
 * [Pako](https://github.com/nodeca/pako/)
@@ -74,6 +78,10 @@ Of the **files** in the root directory, only `index.html` and `service-worker.js
 * [Workbox](https://github.com/GoogleChrome/workbox/)
 * [Conflux](https://github.com/transcend-io/conflux)
   * Only a slightly modified reader is used
+
+> Non JavaScript
+
+* [OpenMoji SVGs](https://github.com/hfg-gmuend/openmoji/)
 * [Font Awesome](https://github.com/FortAwesome/Font-Awesome)
 * [Roboto font](https://github.com/googlefonts/roboto)
 
