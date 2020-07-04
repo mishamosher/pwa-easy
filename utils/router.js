@@ -26,7 +26,6 @@ class Router {
     const routes = [{
         path: '/:siteLanguage',
         component: {template: '<router-view/>'},
-        //beforeEnter: I18n.routeMiddleware,
         children: [
             {
                 path: 'site', component: {template: '<router-view/>'}, children: [
