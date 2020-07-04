@@ -32,16 +32,18 @@ digestString() {
   find ./external/js/global/workbox/ -type f \( -iwholename "*.prod.js" -o -iwholename "*.prod.mjs" \) -print
   echo './external/js/global/workbox/workbox-sw.js'
   # Fontawesome webfonts
-  # find . -type f -iwholename "./external/css/fontawesome/webfonts/*" -print
+  find . -type f -iwholename "./external/css/fontawesome/webfonts/*" -print
+  # Roboto webfonts
+  find . -type f -iwholename "./external/css/roboto/fonts/*" -print
   # Openmoji SVGs
   # find . -type f -iwholename "./external/img/openmoji/*.svg" -print
 
-  # Generate precache for all files not under [.idea|files|external|bundle] directories and that don't start with a dot (.)
-  # This script and service-worker.js are also omitted
-  find . -type d \( -path ./.idea -o -path ./files -o -path ./external -o -path ./bundle \) -prune \
-    -o -type f \( -path "$0" -o -path ./service-worker.js -o -iname '.*' \) -prune \
+  # Generate precache for all files not under [.git|.idea|files|external|bundle] directories and that don't start with a dot (.)
+  # This script, LICENSE, README.md and service-worker.js are also omitted
+  find . -type d \( -path ./.git -o -path ./.idea -o -path ./files -o -path ./external -o -path ./bundle \) -prune \
+    -o -type f \( -path "$0" -o -path ./LICENSE -o -path ./README.md -o -path ./service-worker.js -o -iname '.*' \) -prune \
     -o -type f -print
-} | sponge bundle/file-list.txt
+} >bundle/file-list.txt
 
 # Generate hashes for the file list
 {
