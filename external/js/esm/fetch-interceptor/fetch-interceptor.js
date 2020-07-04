@@ -23,22 +23,22 @@ const _fetchHijacked = async (input, init) => {
     const request = new Request(input, init);
     for (const [key, value] of Object.entries(_defaultHeaders)) request.headers.set(key, value);
 
-    for (const interceptor of _interceptors.onBeforeRequest) interceptor(request, controller);
+    for (const interceptor of _interceptors.onBeforeRequest) await interceptor(request, controller);
     const promise = _fetchOriginal(request);
-    for (const interceptor of _interceptors.onAfterRequest) interceptor(request, controller);
+    for (const interceptor of _interceptors.onAfterRequest) await interceptor(request, controller);
 
     let response, hasError, errorObj;
     try {
         response = await promise;
 
-        if (response.ok) for (const interceptor of _interceptors.onRequestSuccess) interceptor(response, request, controller)
-        else for (const interceptor of _interceptors.onRequestFailure) interceptor(response, request, controller);
+        if (response.ok) for (const interceptor of _interceptors.onRequestSuccess) await interceptor(response, request, controller)
+        else for (const interceptor of _interceptors.onRequestFailure) await interceptor(response, request, controller);
     } catch (error) {
-        for (const interceptor of _interceptors.onRequestException) interceptor(error, request, controller);
+        for (const interceptor of _interceptors.onRequestException) await interceptor(error, request, controller);
         hasError = true;
         errorObj = error;
     } finally {
-        for (const interceptor of _interceptors.onRequestFinally) interceptor(request, controller);
+        for (const interceptor of _interceptors.onRequestFinally) await interceptor(request, controller);
     }
 
     if (hasError) throw errorObj;
