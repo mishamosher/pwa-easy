@@ -57,8 +57,8 @@ const _processSitePath = (startURL, sitePath) => {
 const _progressFetchInterceptor = () => {
     let requests = 0;
     FetchInterceptor.addOnBeforeRequest(() => {
-        Progress.start();
         if (requests > 0) Progress.increment();
+        else Progress.start();
         requests++;
     });
     FetchInterceptor.addOnRequestFinally(() => {
@@ -81,7 +81,7 @@ export default class ControllerIndex {
         window.customElements.define('g-emoji', GEmojiElement);
 
         FetchInterceptor.register();
-        Progress.configure({color: ['#23d160', '#7957d5']});
+        Progress.configure({color: ['#4caf50', '#2196f3']});
         Progress.initialize();
         _progressFetchInterceptor();
 
