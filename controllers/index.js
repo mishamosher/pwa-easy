@@ -99,6 +99,25 @@ export default class ControllerIndex {
             href: css
         })));
 
+        const styleSkipToContent = document.createElement('style');
+        // language=CSS
+        styleSkipToContent.textContent = `
+.skip-to-content {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
+.skip-to-content:focus, .skip-to-content:active {
+    z-index: 10;
+    width: initial;
+    height: initial;
+    padding: 12px !important;
+}`;
+        document.head.append(styleSkipToContent);
+
+
         const {startURL, sitePath} = _cleanLocation();
         const {siteLanguage, route} = _processSitePath(startURL, sitePath);
 
@@ -185,6 +204,10 @@ export default class ControllerIndex {
                 themeLightIfNoneSaved() {
                     if (window.localStorage.getItem(_savedThemeKey)) return;
                     this.$vuetify.theme.dark = false;
+                },
+                skipToContent() {
+                    this.$vuetify.goTo('#start-of-content');
+                    this.$el.querySelector('#start-of-content').focus();
                 }
             },
             computed: {

@@ -5,6 +5,7 @@
 -->
 
 <v-app v-scroll="onScroll">
+    <a class="skip-to-content blue darken-4 white--text text-decoration-none" href="javascript:void(0)" @click="skipToContent">Skip to content</a>
     <v-navigation-drawer app clipped v-model="drawer">
         <v-list-item>
             <v-list-item-content>
@@ -62,6 +63,7 @@
     </v-app-bar>
     <v-main>
         <v-container fluid>
+            <div id="start-of-content" tabindex="-1"></div>
             <router-view></router-view>
         </v-container>
     </v-main>
