@@ -1,12 +1,12 @@
 let _status = null;
 let _settings = {
-    minimum: 20,
-    maximum: 95,
-    speed: 0.5,
-    increaseSpeed: 30,
-    height: 3,
-    defaultColor: '#9400D3',
-    color: ["#9400D3"]
+    minimum: 20, // Range is: 0 <= minimum <= 100. Must be less than maximum. Used only when start is called with no params.
+    maximum: 95, // Range is: 0 <= maximum <= 100. Must be more than minimum. The progress bar will never be bigger than this.
+    speed: 0.5,  // In seconds. Wait time for the immediate action (start/go/increment/complete) to complete.
+    increaseSpeed: 30, // In seconds. Wait time for the (start/go/increment) to grow to maximum.
+    height: '3px', // Must be a string. Can use any CSS measurement unit.
+    defaultColor: '#9400d3', // Must be a string. Can be null. Required (and used only) when color is empty.
+    color: ["#9400d3"] // Can't be null. Can be empty. Must be an array.
 };
 
 /**
@@ -80,10 +80,15 @@ const _fadeOut = function (elem) {
     styles.transitionDuration = `${_settings.speed}s, 0s`;
     styles.opacity = '0';
 
-    setTimeout(() => {
+    _timeoutComplete = setTimeout(() => {
+        _timeoutComplete = null; // avoid any clearTimeout call to clear a handled timeout
+
         styles.width = '0%'
     }, 1000 * _settings.speed);
 };
+
+let _timeoutGo = null;
+let _timeoutComplete = null;
 
 /**
  * The Progress class. Allows rendering a progress bar via a simple JavaScript API.
@@ -106,14 +111,13 @@ export default class Progress {
         _progressBarElement = document.createElement('div');
 
         const style = _progressBarElement.style;
-        style.height = `${_settings.height}px`;
+        style.height = _settings.height;
         style.width = '0%';
         style.position = 'fixed';
         style.zIndex = '99999';
         style.top = '0';
         style.left = '0';
-        style.boxShadow = '0 0 2px #29d, 0 0 1px #29d';
-        style.background = 'transparent';
+        style.boxShadow = '0 0 2px #777';
         style.transitionProperty = 'opacity, width';
         style.transitionTimingFunction = 'linear';
         style.transitionDuration = `0s, 0s`;
@@ -141,27 +145,27 @@ export default class Progress {
         let key, value;
         for (key in options) {
             value = options[key];
-            if (value !== undefined && _settings.hasOwnProperty(key)) _settings[key] = value;
+            if (_settings.hasOwnProperty(key)) _settings[key] = value;
         }
     };
 
     /**
-     * Start the progress with minimum width set up in settings
+     * Start the progress with minimum width set up in settings, and grow to maximum. Does nothing if {@link Progress.start} was called already.
      * @param {number} [progress] Width to use instead of the minimum one set up in settings
      */
     static start(progress) {
         if (_isStarted()) return;
 
-        _progressBarElement.style.opacity = '1';
-
         _status = 0; // mark the progress bar as started
 
+        _progressBarElement.style.opacity = 1;
+
         if (typeof progress === "undefined") progress = _settings.minimum;
-        this.go(progress);
+        Progress.go(progress);
     };
 
     /**
-     * Increment progress up to given width
+     * Set the progress to the given width, and grow to maximum. Does nothing if {@link Progress.start} was not called first.
      * @param {number} progress
      */
     static go(progress) {
@@ -169,36 +173,47 @@ export default class Progress {
 
         _status = progress = _clamp(progress, 1, _settings.maximum);
 
-        if (!_isRendered()) this.initialize();
+        // go "stacks" (if called multiple times, all of them are effective). Clear _timeoutGo and _timeoutComplete here.
+        clearTimeout(_timeoutGo);
+        clearTimeout(_timeoutComplete);
+        _timeoutComplete = null; // _timeoutGo is assigned below, there is no point on clearing it too
 
-        const barCss = _getBarCss(progress, _settings.speed, 'linear');
-        _applyCss(_progressBarElement, barCss);
+        if (!_isRendered()) Progress.initialize();
 
-        setTimeout(() => {
-            const barCss = _getBarCss(_settings.maximum, _settings.increaseSpeed, 'cubic-bezier(0,0,0,1)');
-            _applyCss(_progressBarElement, barCss);
+        _applyCss(_progressBarElement, _getBarCss(progress, _settings.speed, 'linear'));
+
+        _timeoutGo = setTimeout(() => {
+            _timeoutGo = null; // avoid any clearTimeout call to clear a handled timeout
+
+            _applyCss(_progressBarElement, _getBarCss(_settings.maximum, _settings.increaseSpeed, 'cubic-bezier(0,0,0,1)'));
         }, Number(_settings.speed) * 1000);
     };
 
     /**
-     * Complete the progress bar by setting the width to 100%.
+     * Complete the progress bar by setting the width to 100% and then fading out. Does nothing if {@link Progress.start} was not called first.
      */
     static complete() {
         if (!_isStarted()) return;
 
-        setTimeout(() => { // we can have a pending timeout from the [go] function. Let's play nice and wait.
-            const barCss = _getBarCss(100, _settings.speed, 'linear');
-            _applyCss(_progressBarElement, barCss);
+        _status = null;
 
-            setTimeout(() => {
-                _fadeOut(_progressBarElement);
-                _status = null;
-            }, Number(_settings.speed) * 1000);
+        // complete doesn't "stack" (if called multiple times, only the first call is effective). It is not necessary to handle _timeoutComplete here.
+        clearTimeout(_timeoutGo);
+        _timeoutGo = null;
+
+        _applyCss(_progressBarElement, _getBarCss(100, _settings.speed, 'linear'));
+
+        _timeoutComplete = setTimeout(() => {
+            _timeoutComplete = null; // avoid any clearTimeout call to clear a handled timeout
+
+            _fadeOut(_progressBarElement);
         }, Number(_settings.speed) * 1000);
     };
 
     /**
-     * Increment progress by amount and continue until maximum width configured in settings
+     * Increment progress by amount and continue until maximum width configured in settings. Does nothing if {@link Progress.start} was not called first.
+     *
+     * If the amount is skipped, one will be generated according to the current progress.
      * @param {number} [amount]
      */
     static increment(amount) {
@@ -206,27 +221,15 @@ export default class Progress {
 
         let n = _status;
 
-        if (typeof n === 'undefined') {
-            return this.start(0);
-        } else if (n > 100) {
-            return;
-        } else {
-            if (typeof amount === 'undefined') {
-                if (n >= 0 && n < 20) {
-                    amount = 10;
-                } else if (n >= 20 && n < 50) {
-                    amount = 4;
-                } else if (n >= 50 && n < 80) {
-                    amount = 2;
-                } else if (n >= 80 && n < 99) {
-                    amount = 1;
-                } else {
-                    amount = 0;
-                }
-            }
-            n = _clamp(n + amount, 1, _settings.maximum);
-
-            this.go(n);
+        if (typeof amount === 'undefined') {
+            if (n >= 0 && n < 20) amount = 10;
+            else if (n >= 20 && n < 50) amount = 4;
+            else if (n >= 50 && n < 80) amount = 2;
+            else if (n >= 80 && n < 99) amount = 1;
+            else amount = 0;
         }
+        n = _clamp(n + amount, 1, _settings.maximum);
+
+        Progress.go(n);
     };
 }
