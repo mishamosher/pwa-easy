@@ -7,6 +7,7 @@
   "Nowhere": "Никуда",
   "Demo": "Показ",
   "Go to the top": "К началу страницы",
+  "Invert colours": "Инвертировать цвета",
   "$vuetify": {
     "badge": "знак",
     "close": "Закрыть",

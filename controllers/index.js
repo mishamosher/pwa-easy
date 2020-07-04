@@ -67,6 +67,8 @@ const _progressFetchInterceptor = () => {
     });
 }
 
+const _savedThemeKey = `${config.rootURL.href}-theme`;
+
 export default class ControllerIndex {
     constructor() {
         throw new Error('Can not instantiate. Please use the static members.');
@@ -102,6 +104,19 @@ export default class ControllerIndex {
 
         await I18n.saveAndChangeLanguage(siteLanguage);
 
+        const mqlDark = window.matchMedia("(prefers-color-scheme: dark)");
+        const mqlLight = window.matchMedia("(prefers-color-scheme: light)");
+
+        let theme = window.localStorage.getItem(_savedThemeKey);
+        if (!theme) {
+            if (mqlDark.matches) theme = 'dark';
+            else if (mqlLight.matches) theme = 'light';
+            else {
+                const hour = (new Date()).getHours();
+                theme = (hour < 4 || hour >= 17) ? 'dark' : 'light';
+            }
+        }
+
         globalThis.app = new Vue({
             i18n: I18n.vueI18nInstance,
             router: Router.vueRouterInstance,
@@ -112,6 +127,9 @@ export default class ControllerIndex {
                 lang: {
                     t: (key, ...params) => I18n.vueI18nInstance.t(key, params),
                     current: siteLanguage
+                },
+                theme: {
+                    dark: theme === 'dark'
                 }
             }),
             el: '#app',
@@ -120,6 +138,9 @@ export default class ControllerIndex {
                 if (this.$router.currentRoute.fullPath !== route) this.$router.replace(route);
             },
             mounted() {
+                mqlDark.addEventListener('change', e => e.matches && this.themeDarkIfNoneSaved())
+                mqlLight.addEventListener('change', e => e.matches && this.themeLightIfNoneSaved())
+
                 this.$nextTick(function () {
                     document.head.removeChild(document.head.querySelector('#styles-temporary'))
                 });
@@ -151,6 +172,19 @@ export default class ControllerIndex {
                 },
                 onScroll() {
                     this.scrollTopVisible = window.pageYOffset > 0;
+                },
+                invertTheme() {
+                    const newValue = !this.$vuetify.theme.dark;
+                    this.$vuetify.theme.dark = newValue;
+                    window.localStorage.setItem(_savedThemeKey, newValue ? 'dark' : 'light');
+                },
+                themeDarkIfNoneSaved() {
+                    if (window.localStorage.getItem(_savedThemeKey)) return;
+                    this.$vuetify.theme.dark = true;
+                },
+                themeLightIfNoneSaved() {
+                    if (window.localStorage.getItem(_savedThemeKey)) return;
+                    this.$vuetify.theme.dark = false;
                 }
             },
             computed: {

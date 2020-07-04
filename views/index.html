@@ -42,6 +42,9 @@
         <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
         <v-toolbar-title>App template</v-toolbar-title>
         <v-spacer></v-spacer>
+        <v-btn icon @click="invertTheme" :title="$t('Invert colours')">
+            <v-icon>fas fa-adjust</v-icon>
+        </v-btn>
         <v-menu offset-y>
             <template v-slot:activator="{ on, attrs }">
                 <v-btn text v-bind="attrs" v-on="on">
