@@ -34,7 +34,9 @@
 <script type="module">
     import './config/globals.js';
 
-    Promise.resolve((async () => {
+    const sleep = ms => new Promise(resolve => { setTimeout(resolve, ms) });
+
+    (async () => {
         const startApp = async () => {
             let {default: ControllerIndex} = await import('./controllers/index.js');
             await ControllerIndex.initialize();
@@ -58,13 +60,10 @@
             // https://github.com/w3c/ServiceWorker/issues/1222
             // https://github.com/w3c/ServiceWorker/issues/1247
             const swr = await window.navigator.serviceWorker.ready;
-            const checkActivated = () => {
-                if (swr.active.state === 'activated') Promise.resolve(startApp());
-                else setTimeout(checkActivated, 0);
-            };
-            setTimeout(checkActivated, 0);
+            while (swr.active.state !== 'activated') await sleep(0);
+            await startApp();
         } else await startApp(); // fall back to online-only mode
-    })());
+    })();
 </script>
 </body>
 </html>
