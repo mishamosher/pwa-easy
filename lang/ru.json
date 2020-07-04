@@ -8,6 +8,7 @@
   "Demo": "Показ",
   "Go to the top": "К началу страницы",
   "Invert colours": "Инвертировать цвета",
+  "Main menu": "Главное меню",
   "$vuetify": {
     "badge": "знак",
     "close": "Закрыть",
