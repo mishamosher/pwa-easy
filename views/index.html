@@ -39,7 +39,7 @@
         </v-list>
     </v-navigation-drawer>
     <v-app-bar app dense clipped-left hide-on-scroll>
-        <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
+        <v-app-bar-nav-icon :title="$t('Main menu')" @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
         <v-toolbar-title>App template</v-toolbar-title>
         <v-spacer></v-spacer>
         <v-btn icon @click="invertTheme" :title="$t('Invert colours')">
@@ -47,7 +47,7 @@
         </v-btn>
         <v-menu offset-y>
             <template v-slot:activator="{ on, attrs }">
-                <v-btn text v-bind="attrs" v-on="on">
+                <v-btn text v-bind="attrs" v-on="on" :title="$t('Language')">
                     <v-icon left>fas fa-language</v-icon>
                     <div class="hidden-sm-and-down">{{$t('Language')}}</div>
                     <v-icon right>fas fa-caret-down</v-icon>
