@@ -43,7 +43,7 @@
         };
 
         if ('serviceWorker' in window.navigator) {
-            const Workbox = 'localhost' === window.location.host
+            const Workbox = 'localhost' === window.location.hostname
                 ? (await import('./external/js/global/workbox/workbox-window.dev.mjs')).Workbox
                 : (await import('./external/js/global/workbox/workbox-window.prod.mjs')).Workbox;
 
