@@ -47,11 +47,10 @@
                 ? (await import('./external/js/global/workbox/workbox-window.dev.mjs')).Workbox
                 : (await import('./external/js/global/workbox/workbox-window.prod.mjs')).Workbox;
 
-            const wb = new Workbox('service-worker.js', {updateViaCache: 'none'});
+            const wb = new Workbox(`${config.rootURL.pathname}service-worker.js`, {updateViaCache: 'none'});
 
-            wb.addEventListener('installed', (event) => {
-                if (event.isUpdate && app) app.showUpdateToast();
-            });
+            wb.addEventListener('installed', event => { if (event.isUpdate) app?.showUpdateSnackbar(); });
+            wb.addEventListener('externalactivated', () => { app?.showUpdateSnackbar(); });
 
             await wb.register();
 

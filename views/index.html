@@ -93,4 +93,11 @@
             <v-icon>fas fa-chevron-up</v-icon>
         </v-btn>
     </v-scale-transition>
+    <v-snackbar centered color="info" v-model="updateSnackbarVisible" timeout="-1">
+        {{$t('Site updated! Reload?')}}
+        <template v-slot:action="{ attrs }">
+            <v-btn text v-bind="attrs" @click="reloadPage">{{$t('Yes')}}</v-btn>
+            <v-btn text v-bind="attrs" @click="updateSnackbarVisible = false">{{$t('No')}}</v-btn>
+        </template>
+    </v-snackbar>
 </v-app>

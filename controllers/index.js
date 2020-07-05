@@ -173,21 +173,11 @@ export default class ControllerIndex {
                     await I18n.saveAndChangeLanguage(newLanguage);
                     this.$vuetify.lang.current = newLanguage;
                 },
-                showUpdateToast() {
-                    this.updateToast = this.$buefy.snackbar.open({
-                        message: this.$t('Site updated!'),
-                        indefinite: true,
-                        type: 'is-warning',
-                        actionText: this.$t('More Info'),
-                        onAction: () => this.$buefy.dialog.confirm({
-                            title: this.$t('Site update'),
-                            message: this.$t('The site has been updated and reloading it is recommended. Reload?'),
-                            confirmText: this.$t('Yes'),
-                            type: 'is-warning',
-                            hasIcon: true,
-                            onConfirm: () => window.location.reload()
-                        })
-                    });
+                showUpdateSnackbar() {
+                    this.updateSnackbarVisible = true;
+                },
+                reloadPage() {
+                    window.location.reload();
                 },
                 onScroll() {
                     this.scrollTopVisible = window.pageYOffset > 0;
