@@ -1,0 +1,103 @@
+<!--
+  Main view of the app. Contains elements that are shared for any other view of the app. Do not use relative URLs here.
+
+  Note that you can use relative URLs on sub-views.
+-->
+
+<v-app v-scroll="onScroll">
+    <a class="skip-to-content blue darken-4 white--text text-decoration-none" href="javascript:void(0)" @click="skipToContent">Skip to content</a>
+    <v-navigation-drawer app clipped v-model="drawer">
+        <v-list-item>
+            <v-list-item-content>
+                <v-list-item-title class="title">
+                    Application
+                </v-list-item-title>
+                <v-list-item-subtitle>
+                    subtext
+                </v-list-item-subtitle>
+            </v-list-item-content>
+        </v-list-item>
+        <v-divider></v-divider>
+        <v-list dense nav>
+            <v-list-item :to="`/${$i18n.locale}/site/demo`">
+                <v-list-item-icon>
+                    <v-icon>fas fa-chalkboard</v-icon>
+                </v-list-item-icon>
+
+                <v-list-item-content>
+                    <v-list-item-title>{{$t('Demo')}}</v-list-item-title>
+                </v-list-item-content>
+            </v-list-item>
+            <v-list-item :to="`/${$i18n.locale}/nowhere`">
+                <v-list-item-icon>
+                    <v-icon>fas fa-mask</v-icon>
+                </v-list-item-icon>
+
+                <v-list-item-content>
+                    <v-list-item-title>{{$t('Nowhere')}}</v-list-item-title>
+                </v-list-item-content>
+            </v-list-item>
+        </v-list>
+    </v-navigation-drawer>
+    <v-app-bar app dense clipped-left hide-on-scroll>
+        <v-app-bar-nav-icon :title="$t('Main menu')" @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
+        <v-toolbar-title>App template</v-toolbar-title>
+        <v-spacer></v-spacer>
+        <v-btn icon @click="invertTheme" :title="$t('Invert colours')">
+            <v-icon>fas fa-adjust</v-icon>
+        </v-btn>
+        <v-menu offset-y>
+            <template v-slot:activator="{ on, attrs }">
+                <v-btn text v-bind="attrs" v-on="on" :title="$t('Language')">
+                    <v-icon left>fas fa-language</v-icon>
+                    <div class="hidden-sm-and-down">{{$t('Language')}}</div>
+                    <v-icon right>fas fa-caret-down</v-icon>
+                </v-btn>
+            </template>
+            <v-list>
+                <v-list-item v-for="(value, key) in siteLanguages" :key="key" :to="`${routeToLanguage(key)}`" @click="changeLanguage(key)">
+                    <v-list-item-title>{{value}}</v-list-item-title>
+                </v-list-item>
+            </v-list>
+        </v-menu>
+    </v-app-bar>
+    <v-main>
+        <v-container fluid>
+            <div id="start-of-content" tabindex="-1"></div>
+            <router-view></router-view>
+        </v-container>
+    </v-main>
+    <v-footer>
+        <v-row align="center" justify="center">
+            <div class="mr-2">
+                <v-img contain height="100%" width="200px" :src="`${$router.history.base}/img/logo-generic.svg`"></v-img>
+            </div>
+            <div>
+                App footer
+            </div>
+        </v-row>
+    </v-footer>
+    <v-scale-transition origin="center">
+        <v-btn
+                v-show="scrollTopVisible"
+                @click="$vuetify.goTo(0)"
+                fab
+                dark
+                bottom
+                right
+                fixed
+                large
+                :title="$t('Go to the top')"
+                color="red"
+        >
+            <v-icon>fas fa-chevron-up</v-icon>
+        </v-btn>
+    </v-scale-transition>
+    <v-snackbar centered color="info" v-model="updateSnackbarVisible" timeout="-1">
+        {{$t('Site updated! Reload?')}}
+        <template v-slot:action="{ attrs }">
+            <v-btn text v-bind="attrs" @click="reloadPage">{{$t('Yes')}}</v-btn>
+            <v-btn text v-bind="attrs" @click="updateSnackbarVisible = false">{{$t('No')}}</v-btn>
+        </template>
+    </v-snackbar>
+</v-app>
