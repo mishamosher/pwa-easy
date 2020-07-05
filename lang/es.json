@@ -9,6 +9,8 @@
   "Go to the top": "Ir al tope",
   "Invert colours": "Invertir colores",
   "Main menu": "Menú principal",
+  "Site updated! Reload?": "¡Sitio actualizado! ¿Recargar?",
+  "Yes": "Sí",
   "$vuetify": {
     "badge": "Placa",
     "close": "Cerrar",

@@ -9,6 +9,9 @@
   "Go to the top": "К началу страницы",
   "Invert colours": "Инвертировать цвета",
   "Main menu": "Главное меню",
+  "Site updated! Reload?": "Сайт обновлен! Перезагрузить?",
+  "Yes": "Да",
+  "No": "Нет",
   "$vuetify": {
     "badge": "знак",
     "close": "Закрыть",
