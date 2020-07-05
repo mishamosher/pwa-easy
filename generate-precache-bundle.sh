@@ -39,9 +39,9 @@ digestString() {
   # find . -type f -iwholename "./external/img/openmoji/*.svg" -print
 
   # Generate precache for all files not under [.git|.idea|files|external|bundle] directories and that don't start with a dot (.)
-  # This script, LICENSE, README.md and service-worker.js are also omitted
+  # This script, LICENSE, README.md, CONTRIBUTING.md and service-worker.js are also omitted
   find . -type d \( -path ./.git -o -path ./.idea -o -path ./files -o -path ./external -o -path ./bundle \) -prune \
-    -o -type f \( -path "$0" -o -path ./LICENSE -o -path ./README.md -o -path ./service-worker.js -o -iname '.*' \) -prune \
+    -o -type f \( -path "$0" -o -path ./LICENSE -o -path ./README.md -o -path ./CONTRIBUTING.md -o -path ./service-worker.js -o -iname '.*' \) -prune \
     -o -type f -print
 } >bundle/file-list.txt
 
