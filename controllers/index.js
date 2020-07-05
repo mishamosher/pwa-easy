@@ -67,7 +67,7 @@ const _progressFetchInterceptor = () => {
     });
 }
 
-const _savedThemeKey = `${config.rootURL.href}-theme`;
+const _savedThemeKey = `${config.rootURL.pathname}-theme`;
 
 export default class ControllerIndex {
     constructor() {

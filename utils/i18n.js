@@ -4,7 +4,7 @@ import VueI18n from "../external/js/esm/vue-i18n/vue-i18n.esm.browser.js";
 
 let _vueI18nInstance;
 
-const _savedLanguageKey = `${config.rootURL.href}-language`;
+const _savedLanguageKey = `${config.rootURL.pathname}-language`;
 
 const _propagateLanguage = (language) => {
     _vueI18nInstance.locale = language;
