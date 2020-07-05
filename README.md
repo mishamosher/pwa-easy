@@ -51,6 +51,11 @@ Please note that it is **not** required to make any modification to the template
 
 Of the **files** in the root directory, only `index.html` and `service-worker.js` are required. You can safely skip all the other files when uploading the app to a web server. Note that it is not the case with the **folders** in the root directory.  
 
+## Various
+
+* The size of the base PWA, bundled, is a bit less than 1 MiB. This excludes the OpenMoji SVGs.
+* The base lighthouse scores are of 90+.
+
 ## Libraries and frameworks used (kudos to 'em!)
 
 > JavaScript ES modules
