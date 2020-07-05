@@ -209,7 +209,8 @@ export default class ControllerIndex {
             },
             data: {
                 drawer: false,
-                scrollTopVisible: false
+                scrollTopVisible: false,
+                updateSnackbarVisible: false
             }
         });
     }
