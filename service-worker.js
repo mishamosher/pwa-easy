@@ -3,12 +3,17 @@ importScripts('./bundle/precacheBundle-HASH.js', './bundle/precacheList-HASH.js'
 
 const rootURL = new URL('./', self.location.href);
 
-importScripts(
-    './external/js/global/workbox/workbox-sw.js',
+importScripts('./external/js/global/workbox/workbox-sw.js');
+
+const scripts = [
     './external/js/global/pako/pako_inflate.js',
     './external/js/global/zip-stream/read.js',
     './external/js/global/mime/index.js'
-);
+];
+
+if ('localhost' !== self.location.hostname) scripts.splice(0, scripts.length, ...scripts.map(x => x.replace(/js$/, 'min.js')));
+
+importScripts(...scripts);
 
 workbox.setConfig({
     modulePathPrefix: `${rootURL.pathname}external/js/global/workbox/`
