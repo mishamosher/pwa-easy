@@ -8992,6 +8992,13 @@ __webpack_require__.r(__webpack_exports__);
   name: 'v-main',
   created: function created() {
     Object(_util_console__WEBPACK_IMPORTED_MODULE_1__["deprecate"])('v-content', 'v-main', this);
+  },
+  render: function render(h) {
+    // Add the legacy class names
+    var node = _VMain_VMain__WEBPACK_IMPORTED_MODULE_0__["default"].options.render.call(this, h);
+    node.data.staticClass += ' v-content';
+    node.children[0].data.staticClass += ' v-content__wrap';
+    return h(node.tag, node.data, node.children);
   }
 }));
 
@@ -16816,7 +16823,8 @@ var hasIntersect = typeof window !== 'undefined' && 'IntersectionObserver' in wi
       image: null,
       isLoading: true,
       calculatedAspectRatio: undefined,
-      naturalWidth: undefined
+      naturalWidth: undefined,
+      hasError: false
     };
   },
   computed: {
@@ -16837,7 +16845,7 @@ var hasIntersect = typeof window !== 'undefined' && 'IntersectionObserver' in wi
       };
     },
     __cachedImage: function __cachedImage() {
-      if (!(this.normalisedSrc.src || this.normalisedSrc.lazySrc)) return [];
+      if (!(this.normalisedSrc.src || this.normalisedSrc.lazySrc || this.gradient)) return [];
       var backgroundImage = [];
       var src = this.isLoading ? this.normalisedSrc.lazySrc : this.currentSrc;
       if (this.gradient) backgroundImage.push("linear-gradient(" + this.gradient + ")");
@@ -16899,6 +16907,7 @@ var hasIntersect = typeof window !== 'undefined' && 'IntersectionObserver' in wi
       this.$emit('load', this.src);
     },
     onError: function onError() {
+      this.hasError = true;
       this.$emit('error', this.src);
     },
     getSrc: function getSrc() {
@@ -16923,6 +16932,7 @@ var hasIntersect = typeof window !== 'undefined' && 'IntersectionObserver' in wi
       };
 
       image.onerror = this.onError;
+      this.hasError = false;
       image.src = this.normalisedSrc.src;
       this.sizes && (image.sizes = this.sizes);
       this.normalisedSrc.srcset && (image.srcset = this.normalisedSrc.srcset);
@@ -16944,7 +16954,7 @@ var hasIntersect = typeof window !== 'undefined' && 'IntersectionObserver' in wi
           _this.naturalWidth = naturalWidth;
           _this.calculatedAspectRatio = naturalWidth / naturalHeight;
         } else {
-          timeout != null && setTimeout(poll, timeout);
+          timeout != null && !_this.hasError && setTimeout(poll, timeout);
         }
       };
 
@@ -19283,6 +19293,11 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_13__["default"])(_
           keydown: this.onKeyDown
         }
       };
+
+      if (this.$listeners.scroll) {
+        options.on = options.on || {};
+        options.on.scroll = this.$listeners.scroll;
+      }
 
       if (!this.disabled && this.openOnHover) {
         options.on = options.on || {};
@@ -22617,23 +22632,12 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_13__["default"])(_
       this.initialValue = val;
       this.setSelectedItems();
     },
-    menuIsBooted: function menuIsBooted() {
-      var _this = this;
-
-      window.setTimeout(function () {
-        if (_this.getContent() && _this.getContent().addEventListener) {
-          _this.getContent().addEventListener('scroll', _this.onScroll, false);
-        }
-      });
-    },
     isMenuActive: function isMenuActive(val) {
       var _this = this;
 
       window.setTimeout(function () {
         return _this.onMenuActiveChange(val);
       });
-      if (!val) return;
-      this.menuIsBooted = true;
     },
     items: {
       immediate: true,
@@ -22869,7 +22873,8 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_13__["default"])(_
           input: function input(val) {
             _this.isMenuActive = val;
             _this.isFocused = val;
-          }
+          },
+          scroll: this.onScroll
         },
         ref: 'menu'
       }, [this.genList()]);
@@ -23067,7 +23072,7 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_13__["default"])(_
           return _this.getContent().scrollTop = 0;
         });
       } else {
-        if (this.lastItem >= this.computedItems.length) return;
+        if (this.lastItem > this.computedItems.length) return;
         var showMoreItems = this.getContent().scrollHeight - (this.getContent().scrollTop + this.getContent().clientHeight) < 200;
 
         if (showMoreItems) {
@@ -30956,7 +30961,7 @@ __webpack_require__.r(__webpack_exports__);
     height: 'onScroll',
     itemHeight: 'onScroll'
   },
-  created: function created() {
+  mounted: function mounted() {
     this.last = this.getLast(0);
   },
   methods: {
@@ -33272,7 +33277,7 @@ function () {
 
   Vuetify.install = _install__WEBPACK_IMPORTED_MODULE_0__["install"];
   Vuetify.installed = false;
-  Vuetify.version = "2.3.2";
+  Vuetify.version = "2.3.3";
   Vuetify.config = {
     silent: false
   };
@@ -34477,22 +34482,22 @@ __webpack_require__.r(__webpack_exports__);
 __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = ({
   badge: 'Jelvény',
-  close: 'Close',
+  close: 'Bezárás',
   dataIterator: {
     noResultsText: 'Nincs egyező találat',
-    loadingText: 'Loading item...'
+    loadingText: 'Betöltés...'
   },
   dataTable: {
     itemsPerPageText: 'Elem oldalanként:',
     ariaLabel: {
-      sortDescending: 'Sorted descending. Activate to remove sorting.',
-      sortAscending: 'Sorted ascending. Activate to sort descending.',
-      sortNone: 'Not sorted. Activate to sort ascending.',
-      activateNone: 'Activate to remove sorting.',
-      activateDescending: 'Activate to sort descending.',
-      activateAscending: 'Activate to sort ascending.'
+      sortDescending: 'Csökkenő sorrendbe rendezve.',
+      sortAscending: 'Növekvő sorrendbe rendezve.',
+      sortNone: 'Rendezetlen.',
+      activateNone: 'Rendezés törlése.',
+      activateDescending: 'Aktiváld a csökkenő rendezésért.',
+      activateAscending: 'Aktiváld a növekvő rendezésért.'
     },
-    sortBy: 'Sort by'
+    sortBy: 'Rendezés'
   },
   dataFooter: {
     itemsPerPageText: 'Elem oldalanként:',
@@ -34504,7 +34509,7 @@ __webpack_require__.r(__webpack_exports__);
     pageText: '{0}-{1} / {2}'
   },
   datePicker: {
-    itemsSelected: '{0} kiválaszta/-ott',
+    itemsSelected: '{0} kiválasztva',
     nextMonthAriaLabel: 'Következő hónap',
     nextYearAriaLabel: 'Következő év',
     prevMonthAriaLabel: 'Előző hónap',
@@ -34512,30 +34517,30 @@ __webpack_require__.r(__webpack_exports__);
   },
   noDataText: 'Nincs elérhető adat',
   carousel: {
-    prev: 'Korábbi vizuális',
-    next: 'Következő vizuális',
+    prev: 'Előző',
+    next: 'Következő',
     ariaLabel: {
-      delimiter: 'Carousel slide {0} of {1}'
+      delimiter: 'Dia {0}/{1}'
     }
   },
   calendar: {
     moreEvents: '{0} további'
   },
   fileInput: {
-    counter: '{0} files',
-    counterSize: '{0} files ({1} in total)'
+    counter: '{0} fájl',
+    counterSize: '{0} fájl ({1} összesen)'
   },
   timePicker: {
-    am: 'AM',
-    pm: 'PM'
+    am: 'de',
+    pm: 'du'
   },
   pagination: {
     ariaLabel: {
-      wrapper: 'Lapszámozásának navigáció',
+      wrapper: 'Oldal navigáció',
       next: 'Következő oldal',
       previous: 'Előző oldal',
-      page: 'Menj az oldalra {0}',
-      currentPage: 'Aktuális oldal, oldal {0}'
+      page: 'Menj a(z) {0}. oldalra',
+      currentPage: 'Aktuális oldal: {0}'
     }
   }
 });
