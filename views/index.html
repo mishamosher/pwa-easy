@@ -100,4 +100,10 @@
             <v-btn text v-bind="attrs" @click="updateSnackbarVisible = false">{{$t('No')}}</v-btn>
         </template>
     </v-snackbar>
+    <v-snackbar :color="notificationSnackbarColor" v-model="notificationSnackbarVisible">
+        {{notificationSnackbarMessage}}
+        <template v-slot:action="{ attrs }">
+            <v-btn text v-bind="attrs" @click="notificationSnackbarVisible = false">{{$t('Close')}}</v-btn>
+        </template>
+    </v-snackbar>
 </v-app>

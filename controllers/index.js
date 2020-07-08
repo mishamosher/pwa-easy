@@ -198,6 +198,16 @@ export default class ControllerIndex {
                 skipToContent() {
                     this.$vuetify.goTo('#start-of-content');
                     this.$el.querySelector('#start-of-content').focus();
+                },
+                /**
+                 *
+                 * @param {string} message
+                 * @param {string} [color]
+                 */
+                showNotification(message, color) {
+                    this.notificationSnackbarMessage = message;
+                    this.notificationSnackbarColor = color;
+                    this.notificationSnackbarVisible = true;
                 }
             },
             computed: {
@@ -210,7 +220,10 @@ export default class ControllerIndex {
             data: {
                 drawer: false,
                 scrollTopVisible: false,
-                updateSnackbarVisible: false
+                updateSnackbarVisible: false,
+                notificationSnackbarVisible: false,
+                notificationSnackbarColor: undefined,
+                notificationSnackbarMessage: null
             }
         });
     }
