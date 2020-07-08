@@ -315,8 +315,6 @@ function toneModifier(id) {
     }
 }
 
-const _textContent = new WeakMap();
-
 /**
  * The GEmojiElement class.
  *
@@ -386,12 +384,11 @@ class GEmojiElement extends HTMLElement {
     }
 
     get textContent() {
-        return _textContent.get(this) ?? '';
+        return this.dataset.emoji;
     }
 
     set textContent(value) {
-        value = tonedEmoji(value, this.tone);
-        _textContent.set(this, value);
+        this.dataset.emoji = value;
 
         if (!this.image) return;
         this.image.src = svgUrl(value);
@@ -399,8 +396,8 @@ class GEmojiElement extends HTMLElement {
     }
 
     connectedCallback() {
-        // re-set textContent so it is only stored in a private field and not shown in the DOM
-        _textContent.set(this, super.textContent);
+        // re-set textContent so it is only stored in the data-emoji attribute
+        this.textContent = super.textContent;
         super.textContent = '';
 
         this.appendChild(emojiImage(this));
