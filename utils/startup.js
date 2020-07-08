@@ -62,7 +62,7 @@ class StartupUtils {
     static addHeaders() {
         document.head.append(...[
             {href: `manifest.${I18nBase.savedOrPreferredLanguage}.webmanifest`, rel: "manifest"},
-            {href: "img/logo-pwa-192x192.png", rel: "apple-touch-icon"},
+            {href: "img/apple-touch-icon.png", rel: "apple-touch-icon"},
             {href: "img/favicon-32x32.png", rel: "icon", type: "image/png", sizes: "32x32"},
             {href: "img/favicon-16x16.png", rel: "icon", type: "image/png", sizes: "16x16"},
             {href: "favicon.ico", rel: "shortcut icon"},
