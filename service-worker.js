@@ -187,6 +187,8 @@ class SWHelper {
     }
 
     static registerWorkbox() {
+        const expiresCache = `${workbox.core.cacheNames.prefix}-expires-${workbox.core.cacheNames.suffix}`;
+
         /**
          * Handle all the browser navigation requests and redirect to the rootURL with routing information if not there already.
          * This allows to have "pretty URLs".
@@ -200,6 +202,16 @@ class SWHelper {
          */
         const handler = precacheController.createHandlerBoundToURL(rootURL.pathname);
         const navigationRoute = new workbox.routing.NavigationRoute(async context => {
+            // If the user requests a precached resource, return it as-is
+            const precachedURL = SWHelper.precacheKey(context.url);
+            if (precachedURL) return await SWHelper.cachedResponse(precachedURL);
+
+            // If the user requests a runtime-cached resource that expires, return a fresh copy
+            const cache = await self.caches.open(expiresCache);
+            const response = await cache.match(context.url);
+            if (response) return fetch(context.url);
+
+            // Else, fallback to ./index.html
             if (context.url.pathname === `${rootURL.pathname}index.html`) return Response.redirect(rootURL.pathname);
             if (context.url.pathname !== rootURL.pathname) {
                 const redirectURL = new URL(context.url.href);
@@ -212,12 +224,9 @@ class SWHelper {
         });
         workbox.routing.registerRoute(navigationRoute);
 
-        // use a StaleWhileRevalidate strategy for external resources that are not precached
-        workbox.routing.registerRoute(({url}) => url.href.startsWith(`${rootURL.href}external/`), new workbox.strategies.StaleWhileRevalidate());
-
         // use a StaleWhileRevalidate strategy with expiration for all the requests not matched by any other rule
         workbox.routing.setDefaultHandler(new workbox.strategies.StaleWhileRevalidate({
-            cacheName: `${workbox.core.cacheNames.prefix}-runtime-default-${workbox.core.cacheNames.suffix}`,
+            cacheName: expiresCache,
             plugins: [
                 new workbox.expiration.ExpirationPlugin({
                     maxEntries: 100,
