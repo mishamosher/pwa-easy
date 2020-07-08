@@ -5,54 +5,9 @@ import Progress from "../external/js/esm/progress/progress.js";
 import Router from "../utils/router.js";
 import Vue from "../external/js/esm/vue/vue.esm.browser.js";
 import Vuetify from "../external/js/esm/vuetify/vuetify.js";
+import {StartupUtils} from "../utils/startup.js";
 
 let _initialized = false;
-
-/**
- * Removes the [sitePath] query param of {@link GlobalConfig.startURL} if present.
- * @returns {Object} Object with these properties:
- *  - URL `startURL`: Starting URL, without the [sitePath] query param
- *  - string|null `sitePath`: The extracted `sitePath`, with trailing '/' characters removed. Null if: not present, empty, or containing '/' characters only.
- */
-const _cleanLocation = () => {
-    const startURL = config.startURL;
-
-    // Only accept non-empty strings for [sitePath]. Remove all the trailing slashes.
-    let sitePath = startURL.searchParams.get('sitePath')?.trim() ?? null;
-    if (sitePath !== null) {
-        sitePath = sitePath.replace(/\/+$/, '');
-        if (sitePath.length === 0) sitePath = null;
-    }
-
-    startURL.searchParams.delete('sitePath');
-    if (startURL.href !== config.startURL.href) window.history.replaceState(null, '', startURL.href);
-    return {startURL, sitePath};
-};
-
-/**
- * Processes the [sitePath].
- * @returns {Object} Object with these properties:
- *  - string `siteLanguage`: Language to be used
- *  - string|null `route`: Identified route
- */
-const _processSitePath = (startURL, sitePath) => {
-    const router = Router.vueRouterInstance;
-    let siteLanguage, route;
-    if (sitePath) { // If a sitePath query parameter is set, re-route there. View service-worker.js for more details.
-        siteLanguage = router.match(`/${sitePath}`).params.siteLanguage;
-
-        if (!I18n.isLanguageSupported(siteLanguage)) {
-            siteLanguage = I18n.savedOrPreferredLanguage;
-            sitePath = `${I18n.savedOrPreferredLanguage}/${sitePath}`;
-        }
-
-        route = `/${sitePath}${startURL.search}${startURL.hash}`;
-    } else {
-        siteLanguage = I18n.savedOrPreferredLanguage;
-        route = `/${siteLanguage}`;
-    }
-    return {siteLanguage, route};
-};
 
 const _progressFetchInterceptor = () => {
     let requests = 0;
@@ -68,6 +23,36 @@ const _progressFetchInterceptor = () => {
 }
 
 const _savedThemeKey = `${config.rootURL.pathname}-theme`;
+
+const _processHTMLHeader = () => {
+    document.head.append(...[
+        'external/css/fontawesome/css/all.css',
+        'external/css/vuetify/vuetify.css',
+        'external/css/roboto/css/css.css'
+    ].map((css) => Object.assign(document.createElement('link'), {
+        rel: 'stylesheet',
+        type: 'text/css',
+        href: `${config.rootURL.pathname}${css}`
+    })));
+
+    const styleSkipToContent = document.createElement('style');
+    // language=CSS
+    styleSkipToContent.textContent = `
+.skip-to-content {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
+.skip-to-content:focus, .skip-to-content:active {
+    z-index: 10;
+    width: initial;
+    height: initial;
+    padding: 12px !important;
+}`;
+    document.head.append(styleSkipToContent);
+};
 
 export default class ControllerIndex {
     constructor() {
@@ -89,39 +74,9 @@ export default class ControllerIndex {
 
         document.getElementById('app-template').textContent = await (await fetch(`views/index.html`)).text();
 
-        document.head.append(...[
-            'external/css/fontawesome/css/all.css',
-            'external/css/vuetify/vuetify.css',
-            'external/css/roboto/css/css.css'
-        ].map((css) => Object.assign(document.createElement('link'), {
-            rel: 'stylesheet',
-            type: 'text/css',
-            href: css
-        })));
+        _processHTMLHeader();
 
-        const styleSkipToContent = document.createElement('style');
-        // language=CSS
-        styleSkipToContent.textContent = `
-.skip-to-content {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-}
-
-.skip-to-content:focus, .skip-to-content:active {
-    z-index: 10;
-    width: initial;
-    height: initial;
-    padding: 12px !important;
-}`;
-        document.head.append(styleSkipToContent);
-
-
-        const {startURL, sitePath} = _cleanLocation();
-        const {siteLanguage, route} = _processSitePath(startURL, sitePath);
-
-        await I18n.saveAndChangeLanguage(siteLanguage);
+        await I18n.saveAndChangeLanguage(StartupUtils.siteLanguage);
 
         const mqlDark = window.matchMedia("(prefers-color-scheme: dark)");
         const mqlLight = window.matchMedia("(prefers-color-scheme: light)");
@@ -136,6 +91,10 @@ export default class ControllerIndex {
             }
         }
 
+        Object.defineProperty(Vue.prototype, '$window', {
+            get() { return window; }
+        });
+
         globalThis.app = new Vue({
             i18n: I18n.vueI18nInstance,
             router: Router.vueRouterInstance,
@@ -145,7 +104,7 @@ export default class ControllerIndex {
                 },
                 lang: {
                     t: (key, ...params) => I18n.vueI18nInstance.t(key, params),
-                    current: siteLanguage
+                    current: StartupUtils.siteLanguage
                 },
                 theme: {
                     dark: theme === 'dark'
@@ -154,7 +113,7 @@ export default class ControllerIndex {
             el: '#app',
             template: '#app-template',
             async created() {
-                if (this.$router.currentRoute.fullPath !== route) this.$router.replace(route);
+                if (this.$router.currentRoute.fullPath !== StartupUtils.route) this.$router.replace(StartupUtils.route);
             },
             mounted() {
                 mqlDark.addEventListener('change', e => e.matches && this.themeDarkIfNoneSaved())
