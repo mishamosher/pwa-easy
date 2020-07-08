@@ -1,0 +1,40 @@
+{
+  "short_name": "PWA Fácil",
+  "name": "PWA Fácil - ¡aplicaciones web fáciles!",
+  "description": "Una PWA de ejemplo hecha con la ayuda de PWA Fácil",
+  "icons": [
+    {
+      "src": "./img/pwa-maskable-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./img/pwa-maskable-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "./",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "scope": ".",
+  "theme_color": "#ffffff",
+  "shortcuts": [
+    {
+      "name": "PWA página de muestra",
+      "short_name": "Muestra",
+      "description": "Una página de muestra de la PWA",
+      "url": "./site/demo",
+      "icons": [{ "src": "./img/pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "PWA página a ningún lugar",
+      "short_name": "Ningún lugar",
+      "description": "Una página a ningún lugar de la PWA",
+      "url": "./nowhere",
+      "icons": [{ "src": "./img/pwa-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}
