@@ -11,7 +11,9 @@ const scripts = [
     './external/js/global/mime/index.js'
 ];
 
-if ('localhost' !== self.location.hostname) scripts.splice(0, scripts.length, ...scripts.map(x => x.replace(/js$/, 'min.js')));
+const isLocalhost = 'localhost' === self.location.hostname;
+
+if (!isLocalhost) scripts.splice(0, scripts.length, ...scripts.map(x => x.replace(/js$/, 'min.js')));
 
 importScripts(...scripts);
 
@@ -58,7 +60,7 @@ class SWHelper {
         url.hash = ''; // never sent to server, so let's always remove it
         yield url.href;
 
-        if ('localhost' !== self.location.hostname) { // if running from production, try to retrieve minified resources
+        if (!isLocalhost) { // if running from production, try to retrieve minified resources
             let extension = url.pathname.split('.').pop();
             if (['js', 'mjs', 'css'].includes(extension)) {
                 const minUrl = new URL(url.href);
