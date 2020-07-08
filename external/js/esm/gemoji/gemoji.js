@@ -334,6 +334,7 @@ const _textContent = new WeakMap();
  * @property {string} alias Used to set the 'alt' attribute of the inner HTMLImageElement containing the emoji SVG. If falsy or not present will default to the emoji itself.
  * @property {string} tone Space separated list of tone to apply, 1 trough 5 means white trough black, 0 means no tone
  * @property {string} size Size of the element. Can be suffixed by any CSS measurement unit.
+ * @property {string} verticalAlign Alignment of the element. Can be any valid CSS vertical-align.
  * @property {string} textContent Sets or gets the currently displayed emoji. Please note that setting textContent will respect the alias and tone if present.
  */
 class GEmojiElement extends HTMLElement {
@@ -376,6 +377,14 @@ class GEmojiElement extends HTMLElement {
         this.setAttribute('alias', value);
     }
 
+    get verticalAlign() {
+        return this.getAttribute('vertical-align');
+    }
+
+    set verticalAlign(value) {
+        this.setAttribute('vertical-align', value);
+    }
+
     get textContent() {
         return _textContent.get(this) ?? '';
     }
@@ -399,10 +408,11 @@ class GEmojiElement extends HTMLElement {
         updateTone(this);
         updateSize(this);
         updateAlias(this);
+        updateVerticalAlign(this);
     }
 
     static get observedAttributes() {
-        return ['tone', 'size', 'alias'];
+        return ['tone', 'size', 'alias', 'vertical-align'];
     }
 
     attributeChangedCallback(name) {
@@ -415,6 +425,10 @@ class GEmojiElement extends HTMLElement {
                 break;
             case 'alias':
                 updateAlias(this);
+                break;
+            case 'vertical-align':
+                updateVerticalAlign(this);
+                break;
         }
     }
 }
@@ -430,7 +444,6 @@ function emojiImage(el) {
 
     const style = image.style;
     style.display = 'inline-block';
-    style.verticalAlign = 'text-bottom';
 
     return image;
 }
@@ -472,6 +485,12 @@ function updateSize(el) {
 function updateAlias(el) {
     if (!el.image) return;
     el.image.alt = el.alias || el.textContent;
+}
+
+function updateVerticalAlign(el) {
+    if (!el.image) return;
+    const style = el.image.style;
+    style.verticalAlign = el.verticalAlign || 'text-bottom';
 }
 
 export default GEmojiElement;
