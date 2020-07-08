@@ -47,7 +47,7 @@
             <v-icon>fas fa-adjust</v-icon>
         </v-btn>
         <v-menu offset-y>
-            <template v-slot:activator="{ on, attrs }">
+            <template #activator="{ on, attrs }">
                 <v-btn text v-bind="attrs" v-on="on" :title="$t('Language')">
                     <v-icon left>fas fa-language</v-icon>
                     <div class="hidden-sm-and-down">{{$t('Language')}}</div>
@@ -95,14 +95,14 @@
     </v-scale-transition>
     <v-snackbar centered color="info" v-model="updateSnackbarVisible" timeout="-1">
         {{$t('Site updated! Reload?')}}
-        <template v-slot:action="{ attrs }">
+        <template #action="{ attrs }">
             <v-btn text v-bind="attrs" @click="reloadPage">{{$t('Yes')}}</v-btn>
             <v-btn text v-bind="attrs" @click="updateSnackbarVisible = false">{{$t('No')}}</v-btn>
         </template>
     </v-snackbar>
     <v-snackbar :color="notificationSnackbarColor" v-model="notificationSnackbarVisible">
         {{notificationSnackbarMessage}}
-        <template v-slot:action="{ attrs }">
+        <template #action="{ attrs }">
             <v-btn text v-bind="attrs" @click="notificationSnackbarVisible = false">{{$t('Close')}}</v-btn>
         </template>
     </v-snackbar>
