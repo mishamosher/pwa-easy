@@ -1,3 +1,4 @@
+import EmojiUnicode from "../external/js/esm/emoji-unicode/emoji-unicode.js";
 import GEmojiElement from "../external/js/esm/gemoji/gemoji.js";
 import FetchInterceptor from "../external/js/esm/fetch-interceptor/fetch-interceptor.js";
 import I18n from "../utils/i18n.js";
@@ -72,6 +73,11 @@ export default class ControllerIndex {
 
         Vue.use(Vuetify);
 
+        GEmojiElement.emojiToUriCallback = emoji => {
+            if (emoji === '') return null;
+            const emojiCode = EmojiUnicode.hex(emoji, {separator: '-', psMaxLength: 4, psFillString: '0'}).toUpperCase();
+            return `${config.rootURL.pathname}external/img/openmoji/${emojiCode}.svg`;
+        };
         document.getElementById('app-template').textContent = await (await fetch(`views/index.html`)).text();
 
         _processHTMLHeader();
