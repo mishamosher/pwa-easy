@@ -1,5 +1,3 @@
-import EmojiUnicode from "../emoji-unicode/emoji-unicode.js";
-
 const supported = new Set([
     '👋',
     '🤚',
@@ -329,6 +327,7 @@ function toneModifier(id) {
  *
  * Based on https://github.com/github/g-emoji-element/blob/c057e2ef1ac50891a7f8e7833c3e415f6c2ccb6a/src/index.ts
  *
+ * @property {function} emojiToUriCallback A function pointer. The signature must be `fn(emoji: string): (string|null)`, where the emoji parameter is the emoji to be converted to an URI (can be an empty string), and the returned value is the resulting URI (or null of no URI can be inferred).
  * @property {string} alias Used to set the 'alt' attribute of the inner HTMLImageElement containing the emoji SVG. If falsy or not present will default to the emoji itself.
  * @property {string} tone Space separated list of tone to apply, 1 trough 5 means white trough black, 0 means no tone
  * @property {string} size Size of the element. Can be suffixed by any CSS measurement unit.
@@ -336,6 +335,14 @@ function toneModifier(id) {
  * @property {string} textContent Sets or gets the currently displayed emoji. Please note that setting textContent will respect the alias and tone if present.
  */
 class GEmojiElement extends HTMLElement {
+    static get emojiToUriCallback() {
+        return fnEmojiToUri;
+    }
+
+    static set emojiToUriCallback(value) {
+        fnEmojiToUri = value;
+    }
+
     /**
      * The inner HTMLImageElement containing the emoji SVG
      *
@@ -430,9 +437,7 @@ class GEmojiElement extends HTMLElement {
     }
 }
 
-function svgUrl(emoji) {
-    return `${config.rootURL.pathname}external/img/openmoji/${EmojiUnicode.hex(emoji, '-').toUpperCase()}.svg`;
-}
+let fnEmojiToUri;
 
 function emojiImage() {
     const image = document.createElement('img');
@@ -493,7 +498,11 @@ function updateVerticalAlign(el) {
 function updateDataEmoji(el) {
     updateTone(el);
     if (!el.image) return;
-    el.image.src = svgUrl(el.textContent);
+    if (fnEmojiToUri) {
+        const emojiURI = fnEmojiToUri(el.textContent);
+        if (emojiURI) el.image.src = emojiURI
+        else el.image.removeAttribute('src');
+    } else el.image.removeAttribute('src');
     if (!el.alias) el.image.alt = el.textContent;
 }
 
