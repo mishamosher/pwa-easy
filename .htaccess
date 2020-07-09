@@ -1,5 +1,9 @@
 Options -Indexes
 
+# AddDefaultCharset works for all files with MIME text/plain and text/html
+AddDefaultCharset utf-8
+AddCharset utf-8 .js .mjs .css
+
 RewriteEngine On
 
 RewriteBase /
