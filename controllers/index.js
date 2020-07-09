@@ -122,8 +122,8 @@ export default class ControllerIndex {
                 if (this.$router.currentRoute.fullPath !== StartupUtils.route) this.$router.replace(StartupUtils.route);
             },
             mounted() {
-                mqlDark.addEventListener('change', e => e.matches && this.themeDarkIfNoneSaved())
-                mqlLight.addEventListener('change', e => e.matches && this.themeLightIfNoneSaved())
+                mqlDark.addListener(e => e.matches && this.themeDarkIfNoneSaved());
+                mqlLight.addListener(e => e.matches && this.themeLightIfNoneSaved());
 
                 this.$nextTick(function () {
                     document.head.removeChild(document.head.querySelector('#styles-temporary'))
