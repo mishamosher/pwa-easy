@@ -389,10 +389,6 @@ class GEmojiElement extends HTMLElement {
 
     set textContent(value) {
         this.dataset.emoji = value;
-
-        if (!this.image) return;
-        this.image.src = svgUrl(value);
-        if (!this.alias) this.image.alt = value;
     }
 
     connectedCallback() {
@@ -406,10 +402,11 @@ class GEmojiElement extends HTMLElement {
         updateSize(this);
         updateAlias(this);
         updateVerticalAlign(this);
+        updateDataEmoji(this);
     }
 
     static get observedAttributes() {
-        return ['tone', 'size', 'alias', 'vertical-align'];
+        return ['tone', 'size', 'alias', 'vertical-align', 'data-emoji'];
     }
 
     attributeChangedCallback(name) {
@@ -426,6 +423,9 @@ class GEmojiElement extends HTMLElement {
             case 'vertical-align':
                 updateVerticalAlign(this);
                 break;
+            case 'data-emoji':
+                updateDataEmoji(this);
+                break;
         }
     }
 }
@@ -434,10 +434,9 @@ function svgUrl(emoji) {
     return `${config.rootURL.pathname}external/img/openmoji/${EmojiUnicode.hex(emoji, '-').toUpperCase()}.svg`;
 }
 
-function emojiImage(el) {
+function emojiImage() {
     const image = document.createElement('img');
     image.className = 'emoji';
-    image.src = svgUrl(el.textContent);
 
     const style = image.style;
     style.display = 'inline-block';
@@ -470,7 +469,8 @@ function tonedEmoji(emoji, tone) {
 }
 
 function updateTone(el) {
-    el.textContent = tonedEmoji(el.textContent, el.tone);
+    const toned = tonedEmoji(el.textContent, el.tone);
+    if (toned !== el.textContent) el.textContent = toned;
 }
 
 function updateSize(el) {
@@ -488,6 +488,13 @@ function updateVerticalAlign(el) {
     if (!el.image) return;
     const style = el.image.style;
     style.verticalAlign = el.verticalAlign || 'text-bottom';
+}
+
+function updateDataEmoji(el) {
+    updateTone(el);
+    if (!el.image) return;
+    el.image.src = svgUrl(el.textContent);
+    if (!el.alias) el.image.alt = el.textContent;
 }
 
 export default GEmojiElement;
