@@ -53,6 +53,7 @@ Of the **files** in the root directory, only `index.html` and `service-worker.js
 
 ## Various
 
+* A personal web page of mine made with **PWA Easy** is running [here](https://mishamosher.com/).
 * The size of the base PWA, bundled, is a bit less than 1 MiB. This excludes the OpenMoji SVGs.
 * The base lighthouse scores are of 90+.
 

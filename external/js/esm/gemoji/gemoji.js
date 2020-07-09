@@ -1,5 +1,3 @@
-import EmojiUnicode from "../emoji-unicode/emoji-unicode.js";
-
 const supported = new Set([
     '👋',
     '🤚',
@@ -315,8 +313,6 @@ function toneModifier(id) {
     }
 }
 
-const _textContent = new WeakMap();
-
 /**
  * The GEmojiElement class.
  *
@@ -331,12 +327,22 @@ const _textContent = new WeakMap();
  *
  * Based on https://github.com/github/g-emoji-element/blob/c057e2ef1ac50891a7f8e7833c3e415f6c2ccb6a/src/index.ts
  *
+ * @property {function} emojiToUriCallback A function pointer. The signature must be `fn(emoji: string): (string|null)`, where the emoji parameter is the emoji to be converted to an URI (can be an empty string), and the returned value is the resulting URI (or null of no URI can be inferred).
  * @property {string} alias Used to set the 'alt' attribute of the inner HTMLImageElement containing the emoji SVG. If falsy or not present will default to the emoji itself.
  * @property {string} tone Space separated list of tone to apply, 1 trough 5 means white trough black, 0 means no tone
  * @property {string} size Size of the element. Can be suffixed by any CSS measurement unit.
+ * @property {string} verticalAlign Alignment of the element. Can be any valid CSS vertical-align.
  * @property {string} textContent Sets or gets the currently displayed emoji. Please note that setting textContent will respect the alias and tone if present.
  */
 class GEmojiElement extends HTMLElement {
+    static get emojiToUriCallback() {
+        return fnEmojiToUri;
+    }
+
+    static set emojiToUriCallback(value) {
+        fnEmojiToUri = value;
+    }
+
     /**
      * The inner HTMLImageElement containing the emoji SVG
      *
@@ -376,22 +382,25 @@ class GEmojiElement extends HTMLElement {
         this.setAttribute('alias', value);
     }
 
+    get verticalAlign() {
+        return this.getAttribute('vertical-align');
+    }
+
+    set verticalAlign(value) {
+        this.setAttribute('vertical-align', value);
+    }
+
     get textContent() {
-        return _textContent.get(this) ?? '';
+        return this.dataset.emoji;
     }
 
     set textContent(value) {
-        value = tonedEmoji(value, this.tone);
-        _textContent.set(this, value);
-
-        if (!this.image) return;
-        this.image.src = svgUrl(value);
-        if (!this.alias) this.image.alt = value;
+        this.dataset.emoji = value;
     }
 
     connectedCallback() {
-        // re-set textContent so it is only stored in a private field and not shown in the DOM
-        _textContent.set(this, super.textContent);
+        // re-set textContent so it is only stored in the data-emoji attribute
+        this.textContent = super.textContent;
         super.textContent = '';
 
         this.appendChild(emojiImage(this));
@@ -399,10 +408,12 @@ class GEmojiElement extends HTMLElement {
         updateTone(this);
         updateSize(this);
         updateAlias(this);
+        updateVerticalAlign(this);
+        updateDataEmoji(this);
     }
 
     static get observedAttributes() {
-        return ['tone', 'size', 'alias'];
+        return ['tone', 'size', 'alias', 'vertical-align', 'data-emoji'];
     }
 
     attributeChangedCallback(name) {
@@ -415,22 +426,25 @@ class GEmojiElement extends HTMLElement {
                 break;
             case 'alias':
                 updateAlias(this);
+                break;
+            case 'vertical-align':
+                updateVerticalAlign(this);
+                break;
+            case 'data-emoji':
+                updateDataEmoji(this);
+                break;
         }
     }
 }
 
-function svgUrl(emoji) {
-    return `${config.rootURL.pathname}external/img/openmoji/${EmojiUnicode.hex(emoji, '-').toUpperCase()}.svg`;
-}
+let fnEmojiToUri;
 
-function emojiImage(el) {
+function emojiImage() {
     const image = document.createElement('img');
     image.className = 'emoji';
-    image.src = svgUrl(el.textContent);
 
     const style = image.style;
     style.display = 'inline-block';
-    style.verticalAlign = 'text-bottom';
 
     return image;
 }
@@ -460,7 +474,8 @@ function tonedEmoji(emoji, tone) {
 }
 
 function updateTone(el) {
-    el.textContent = tonedEmoji(el.textContent, el.tone);
+    const toned = tonedEmoji(el.textContent, el.tone);
+    if (toned !== el.textContent) el.textContent = toned;
 }
 
 function updateSize(el) {
@@ -472,6 +487,23 @@ function updateSize(el) {
 function updateAlias(el) {
     if (!el.image) return;
     el.image.alt = el.alias || el.textContent;
+}
+
+function updateVerticalAlign(el) {
+    if (!el.image) return;
+    const style = el.image.style;
+    style.verticalAlign = el.verticalAlign || 'text-bottom';
+}
+
+function updateDataEmoji(el) {
+    updateTone(el);
+    if (!el.image) return;
+    if (fnEmojiToUri) {
+        const emojiURI = fnEmojiToUri(el.textContent);
+        if (emojiURI) el.image.src = emojiURI
+        else el.image.removeAttribute('src');
+    } else el.image.removeAttribute('src');
+    if (!el.alias) el.image.alt = el.textContent;
 }
 
 export default GEmojiElement;

@@ -1,0 +1,40 @@
+{
+  "short_name": "PWA Легко",
+  "name": "PWA Легко - веб-приложения стали проще!",
+  "description": "Пример PWA сделан с помощью PWA Easy",
+  "icons": [
+    {
+      "src": "./img/pwa-maskable-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./img/pwa-maskable-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "./",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "scope": ".",
+  "theme_color": "#ffffff",
+  "shortcuts": [
+    {
+      "name": "PWA Страница показ",
+      "short_name": "Показ",
+      "description": "Демонстрационная страница PWA",
+      "url": "./site/demo",
+      "icons": [{ "src": "./img/pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "PWA Страница никуда",
+      "short_name": "Никуда",
+      "description": "Никуда страница PWA",
+      "url": "./nowhere",
+      "icons": [{ "src": "./img/pwa-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}

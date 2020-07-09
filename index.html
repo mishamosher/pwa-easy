@@ -2,16 +2,19 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, minimal-ui">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="My site, made with PWA Easy">
-    <meta name="theme-color" content="#317EFB"/>
-    <link rel="manifest" href="manifest.webmanifest">
-    <link rel="apple-touch-icon" href="img/logo-pwa-192x192.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
-    <link rel="shortcut icon" href="img/favicon.ico" />
+    <meta name="theme-color" content="#ffffff">
     <title>My site!</title>
     <style id="styles-temporary">
+        html {
+            background: #f0f0f0;
+        }
+
+        body {
+            margin: 0;
+        }
+
         body * {
             display: none;
         }
@@ -50,6 +53,9 @@
     document.getElementById('app').removeAttribute('style');
 
     import './config/globals.js';
+    import {StartupUtils} from "./utils/startup.js";
+
+    StartupUtils.addHeaders();
 
     const sleep = ms => new Promise(resolve => { setTimeout(resolve, ms) });
 

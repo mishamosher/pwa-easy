@@ -12,7 +12,7 @@ class EmojiUnicode {
      * Get the unicode code points of an emoji.
      *
      * @param {String} input The emoji character.
-     * @returns {Array<int>} The unicode code points.
+     * @returns {Array<number>} The unicode code points.
      */
     static raw(input) {
         if (input.length === 1) {
@@ -40,12 +40,18 @@ class EmojiUnicode {
      * Get the unicode code of an emoji in base 16.
      *
      * @param {String} input The emoji character.
-     * @param {String} separator Separator for the joined code points.
-     * @param {String} prefix Prefix for the joined code points.
+     * @param options Options for the base 16 conversion.
+     * @param {String} [options.separator] Separator for the joined code points. Defaults to: `' '`
+     * @param {String} [options.prefix] Prefix for the joined code points. Defaults to: `''`
+     * @param {Number} [options.psMaxLength] Used to pad the start of the code points. Defaults to: `0`
+     * @param {String} [options.psFillString] Used to pad the start of the code points. Defaults to: `' '`
      * @returns {String} The base 16 unicode code.
      */
-    static hex(input, separator = ' ', prefix = '') {
-        return EmojiUnicode.raw(input).map(val => `${prefix}${val.toString(16)}`).join(separator);
+    static hex(input, options) {
+        options = Object.assign({separator: ' ', prefix: '', psMaxLength: 0, psFillString: ' '}, options);
+        return EmojiUnicode.raw(input)
+            .map(val => `${options.prefix}${val.toString(16).padStart(options.psMaxLength, options.psFillString)}`)
+            .join(options.separator);
     }
 }
 

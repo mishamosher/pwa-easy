@@ -4,36 +4,37 @@
   "description": "An example PWA made with the help of PWA Easy",
   "icons": [
     {
-      "src": "./img/logo-pwa-192x192.png",
+      "src": "./img/pwa-maskable-192x192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any maskable"
     },
     {
-      "src": "./img/logo-pwa-512x512.png",
+      "src": "./img/pwa-maskable-512x512.png",
       "type": "image/png",
       "sizes": "512x512",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     }
   ],
   "start_url": "./",
-  "background_color": "#3367D6",
+  "background_color": "#ffffff",
   "display": "standalone",
   "scope": ".",
-  "theme_color": "#3367D6",
+  "theme_color": "#ffffff",
   "shortcuts": [
     {
       "name": "PWA demo page",
       "short_name": "Demo",
       "description": "A demo page of the PWA",
       "url": "./site/demo",
-      "icons": [{ "src": "./img/logo-pwa-192x192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "./img/pwa-192x192.png", "sizes": "192x192" }]
     },
     {
       "name": "PWA nowhere page",
       "short_name": "Nowhere",
       "description": "A nowhere page of the PWA",
       "url": "./nowhere",
-      "icons": [{ "src": "./img/logo-pwa-192x192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "./img/pwa-192x192.png", "sizes": "192x192" }]
     }
   ]
 }

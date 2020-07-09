@@ -1,5 +1,5 @@
-const _rootHref = window.location.origin + window.location.pathname;
 const _startHref = window.location.href;
+const _rootHref = new URL('./', _startHref).href;
 
 class GlobalConfig {
     constructor() {

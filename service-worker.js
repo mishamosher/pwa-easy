@@ -11,7 +11,9 @@ const scripts = [
     './external/js/global/mime/index.js'
 ];
 
-if ('localhost' !== self.location.hostname) scripts.splice(0, scripts.length, ...scripts.map(x => x.replace(/js$/, 'min.js')));
+const isLocalhost = 'localhost' === self.location.hostname;
+
+if (!isLocalhost) scripts.splice(0, scripts.length, ...scripts.map(x => x.replace(/js$/, 'min.js')));
 
 importScripts(...scripts);
 
@@ -43,7 +45,7 @@ class SWHelper {
     static fetch(event) {
         const precachedURL = SWHelper.precacheKey(event.request.url);
         if (!precachedURL) return;
-        event.respondWith(SWHelper.cachedResponse(precachedURL));
+        event.respondWith(SWHelper.precachedResponse(precachedURL));
     }
 
     static precacheKey(url) {
@@ -53,13 +55,22 @@ class SWHelper {
         }
     }
 
+    /**
+     * @param {string|null} uri
+     * @return {string|null}
+     */
+    static uriExtension(uri) {
+        if (uri) uri = uri.trim();
+        return uri ? uri.split('.').pop().toLowerCase() : null;
+    }
+
     static* urlVariations(url) {
-        url = new URL(url, location.href);
+        url = new URL(url, self.location.href);
         url.hash = ''; // never sent to server, so let's always remove it
         yield url.href;
 
-        if ('localhost' !== self.location.hostname) { // if running from production, try to retrieve minified resources
-            let extension = url.pathname.split('.').pop();
+        if (!isLocalhost) { // if running from production, try to retrieve minified resources
+            let extension = SWHelper.uriExtension(url.pathname);
             if (['js', 'mjs', 'css'].includes(extension)) {
                 const minUrl = new URL(url.href);
                 minUrl.pathname = `${url.pathname.slice(0, -extension.length)}min.${extension}`;
@@ -68,7 +79,7 @@ class SWHelper {
         }
     }
 
-    static async cachedResponse(cacheKey) {
+    static async precachedResponse(cacheKey) {
         const cache = await self.caches.open(workbox.core.cacheNames.precache);
         return cache.match(cacheKey);
     }
@@ -175,16 +186,44 @@ class SWHelper {
     }
 
     static zipResponse(resource, entryUrl, entry) {
+        const entryExtension = entryUrl === rootURL.href ? 'html' : SWHelper.uriExtension(entryUrl);
+        const entryMime = mime.getType(entryExtension) ?? 'application/octet-stream';
+
+        let contentType;
+        switch (entryMime) {
+            case 'text/plain':
+            case 'text/html':
+                contentType = `${entryMime}; charset=utf-8`;
+                break;
+            default:
+                contentType = (['js', 'mjs', 'css']).includes(entryExtension) ? `${entryMime}; charset=utf-8` : entryMime;
+                break;
+        }
+
         return new Response(resource, {
             headers: {
-                'Content-Type': entryUrl === rootURL.href ? mime.getType('html') : mime.getType(entryUrl) || 'application/octet-stream',
+                'Content-Type': contentType,
                 'Content-Length': entry.size,
                 'Last-Modified': entry.lastModifiedDate.toUTCString()
             }
         });
     }
 
+    /**
+     * Removes the hash part of an URL and returns a string representing its href.
+     *
+     * @param {string|URL} url
+     * @returns {URL}
+     */
+    static urlWithoutHash(url) {
+        url = typeof url === 'string' ? new URL(url) : new URL(url.href);
+        url.hash = '';
+        return url;
+    }
+
     static registerWorkbox() {
+        const expiresCache = `${workbox.core.cacheNames.prefix}-expires-${workbox.core.cacheNames.suffix}`;
+
         /**
          * Handle all the browser navigation requests and redirect to the rootURL with routing information if not there already.
          * This allows to have "pretty URLs".
@@ -198,24 +237,32 @@ class SWHelper {
          */
         const handler = precacheController.createHandlerBoundToURL(rootURL.pathname);
         const navigationRoute = new workbox.routing.NavigationRoute(async context => {
+            const url = SWHelper.urlWithoutHash(context.url); // web servers never receive the URL hash
+
+            // If the user requests a precached resource, return it as-is
+            const precachedURL = SWHelper.precacheKey(context.url.href);
+            if (precachedURL) return await SWHelper.precachedResponse(precachedURL);
+
+            // If the user requests a runtime-cached resource that expires, return a fresh copy
+            const cache = await self.caches.open(expiresCache);
+            const response = await cache.match(url.href);
+            if (response) return fetch(url.href);
+
+            // Else, fallback to ./index.html
             if (context.url.pathname === `${rootURL.pathname}index.html`) return Response.redirect(rootURL.pathname);
             if (context.url.pathname !== rootURL.pathname) {
-                const redirectURL = new URL(context.url.href);
-                redirectURL.hash = ''; // web servers never receive the URL hash
+                const redirectURL = new URL(url.href);
                 redirectURL.pathname = rootURL.pathname;
-                redirectURL.searchParams.set('sitePath', context.url.pathname.substring(rootURL.pathname.length))
+                redirectURL.searchParams.set('sitePath', url.pathname.substring(rootURL.pathname.length))
                 return Response.redirect(redirectURL.href);
             }
             return await handler(context);
         });
         workbox.routing.registerRoute(navigationRoute);
 
-        // use a StaleWhileRevalidate strategy for external resources that are not precached
-        workbox.routing.registerRoute(({url}) => url.href.startsWith(`${rootURL.href}external/`), new workbox.strategies.StaleWhileRevalidate());
-
         // use a StaleWhileRevalidate strategy with expiration for all the requests not matched by any other rule
         workbox.routing.setDefaultHandler(new workbox.strategies.StaleWhileRevalidate({
-            cacheName: `${workbox.core.cacheNames.prefix}-runtime-default-${workbox.core.cacheNames.suffix}`,
+            cacheName: expiresCache,
             plugins: [
                 new workbox.expiration.ExpirationPlugin({
                     maxEntries: 100,

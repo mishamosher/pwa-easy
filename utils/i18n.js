@@ -1,10 +1,9 @@
 import FetchInterceptor from "../external/js/esm/fetch-interceptor/fetch-interceptor.js";
 import Vue from "../external/js/esm/vue/vue.esm.browser.js";
 import VueI18n from "../external/js/esm/vue-i18n/vue-i18n.esm.browser.js";
+import {I18nBase} from "./startup.js";
 
 let _vueI18nInstance;
-
-const _savedLanguageKey = `${config.rootURL.pathname}-language`;
 
 const _propagateLanguage = (language) => {
     _vueI18nInstance.locale = language;
@@ -12,63 +11,13 @@ const _propagateLanguage = (language) => {
     document.documentElement.lang = language;
 };
 
-class I18n {
-    constructor() {
-        throw new Error('Can not instantiate. Please use the static members.');
-    }
-
+class I18n extends I18nBase {
     static get vueI18nInstance() {
         return _vueI18nInstance;
     }
 
-    static get supportedLanguages() {
-        return {
-            'en': 'English',
-            'es': 'Español',
-            'ru': 'Русский'
-        }
-    }
-
     static get fallbackLanguage() {
         return 'en';
-    }
-
-    static get defaultLanguage() {
-        return 'en';
-    }
-
-    static isLanguageSupported(language) {
-        return Object.keys(I18n.supportedLanguages).includes(language);
-    }
-
-    /**
-     * Gets the user-preferred language, according to the ones present in {@link window.navigator.languages} (only if
-     * it passes a {@link I18n.isLanguageSupported} check), otherwise, {@link I18n.defaultLanguage} is returned.
-     * @returns {string}
-     */
-    static get preferredLanguage() {
-        for (let language of window.navigator.languages) if (I18n.isLanguageSupported(language)) return language;
-        for (let language of window.navigator.languages.map(item => item.split('-')[0])) if (I18n.isLanguageSupported(language)) return language;
-        return I18n.defaultLanguage;
-    }
-
-    static get savedLanguage() {
-        return window.localStorage.getItem(_savedLanguageKey);
-    }
-
-    static set savedLanguage(value) {
-        window.localStorage.setItem(_savedLanguageKey, value);
-    }
-
-    /**
-     * Gets the {@link I18n.savedLanguage} (only if it passes a {@link I18n.isLanguageSupported} check), otherwise,
-     * {@link I18n.preferredLanguage} is returned.
-     * @returns {string}
-     */
-    static get savedOrPreferredLanguage() {
-        const savedLanguage = I18n.savedLanguage;
-        if (I18n.isLanguageSupported(savedLanguage)) return savedLanguage;
-        return I18n.preferredLanguage;
     }
 
     /**
