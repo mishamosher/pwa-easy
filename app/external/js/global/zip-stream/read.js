@@ -6,6 +6,8 @@
  * @license MIT
  */
 
+(() => {
+
 const _crc32Table = (() => {
   let i;
   let j;
@@ -390,3 +392,5 @@ async function* Reader(file) {
 }
 
 globalThis.ZipBlobReader = Reader;
+
+})();
