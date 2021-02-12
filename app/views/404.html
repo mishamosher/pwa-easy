@@ -1,0 +1,22 @@
+<div>
+    <v-container fluid>
+        <v-row align="center" justify="center">
+            <div class="d-inline font-weight-black text-h1">4</div>
+            <div class="d-inline mx-n4"><span class="openmoji-color mx-3" style="font-size: 6rem">😭</span></div>
+            <div class="d-inline font-weight-black text-h1">4</div>
+        </v-row>
+        <v-row justify="center" class="mt-n4 font-weight-bold text-h5 text-uppercase">
+            {{$t('Page not found')}}
+        </v-row>
+        <v-row justify="center">
+            <v-col sm="6" lg="4" class="text-center">
+                {{$t("The page you're looking for might have been removed, had its name changed, or is temporarily unavailable.")}}
+            </v-col>
+        </v-row>
+        <v-row justify="center">
+            <v-btn color="warning" :to="`/${$i18n.locale}`">
+                {{$t('Back to homepage')}}
+            </v-btn>
+        </v-row>
+    </v-container>
+</div>
