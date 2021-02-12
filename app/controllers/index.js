@@ -1,10 +1,9 @@
-import EmojiUnicode from "../external/js/esm/emoji-unicode/emoji-unicode.js";
-import GEmojiElement from "../external/js/esm/gemoji/gemoji.js";
 import FetchInterceptor from "../external/js/esm/fetch-interceptor/fetch-interceptor.js";
 import I18n from "../utils/i18n.js";
 import Progress from "../external/js/esm/progress/progress.js";
 import Router from "../utils/router.js";
 import Vue from "../external/js/esm/vue/vue.esm.browser.js";
+import VueRouter from "../external/js/esm/vue-router/vue-router.esm.browser.js";
 import Vuetify from "../external/js/esm/vuetify/vuetify.js";
 import {StartupUtils} from "../utils/startup.js";
 
@@ -27,13 +26,14 @@ const _savedThemeKey = `${config.rootURL.pathname}-theme`;
 
 const _processHTMLHeader = () => {
     document.head.append(...[
-        'external/css/fontawesome/css/all.css',
-        'external/css/vuetify/vuetify.css',
-        'external/css/roboto/css/css.css'
+        'external/css/fontawesome/css/all.min.css',
+        'external/css/openmoji/openmoji.min.css',
+        'external/css/roboto/css/css.min.css',
+        'external/css/vuetify/vuetify.min.css'
     ].map((css) => Object.assign(document.createElement('link'), {
         rel: 'stylesheet',
         type: 'text/css',
-        href: `${config.rootURL.pathname}${css}`
+        href: `${config.rootURL.pathname}${config.isLocalhost ? css.replace(/min.css$/, 'css') : css}`
     })));
 
     const styleSkipToContent = document.createElement('style');
@@ -64,8 +64,6 @@ export default class ControllerIndex {
         if (_initialized) throw new Error('Already initialized!')
         _initialized = true;
 
-        window.customElements.define('g-emoji', GEmojiElement);
-
         FetchInterceptor.register();
         Progress.configure({color: ['#4caf50', '#2196f3']});
         Progress.initialize();
@@ -73,11 +71,6 @@ export default class ControllerIndex {
 
         Vue.use(Vuetify);
 
-        GEmojiElement.emojiToUriCallback = emoji => {
-            if (emoji === '') return null;
-            const emojiCode = EmojiUnicode.hex(emoji, {separator: '-', psMaxLength: 4, psFillString: '0'}).toUpperCase();
-            return `${config.rootURL.pathname}external/img/openmoji/${emojiCode}.svg`;
-        };
         document.getElementById('app-template').textContent = await (await fetch(`views/index.html`)).text();
 
         _processHTMLHeader();
@@ -116,10 +109,14 @@ export default class ControllerIndex {
                     dark: theme === 'dark'
                 }
             }),
-            el: '#app',
+            el: '#app-dom',
             template: '#app-template',
             async created() {
-                if (this.$router.currentRoute.fullPath !== StartupUtils.route) this.$router.replace(StartupUtils.route);
+                if (this.$router.currentRoute.fullPath !== StartupUtils.route) {
+                    this.$router.replace(StartupUtils.route).catch((e) => {
+                        if (!VueRouter.isNavigationFailure(e, VueRouter.NavigationFailureType.redirected)) throw e;
+                    });
+                }
             },
             mounted() {
                 mqlDark.addListener(e => e.matches && this.themeDarkIfNoneSaved());

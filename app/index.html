@@ -44,14 +44,14 @@
     Please enable JavaScript to access this site.
 </noscript>
 
-<div id="app" style="display: none">
+<div id="app-dom" style="display: none">
     <div id="app-loading"></div>
 </div>
 
 <script type="text/x-template" id="app-template"></script>
 
 <script type="module">
-    document.getElementById('app').removeAttribute('style');
+    document.getElementById('app-dom').removeAttribute('style');
 
     import './config/globals.js';
     import {StartupUtils} from "./utils/startup.js";
@@ -66,7 +66,7 @@
         };
 
         if ('serviceWorker' in window.navigator) {
-            const Workbox = 'localhost' === window.location.hostname
+            const Workbox = config.isLocalhost
                 ? (await import('./external/js/global/workbox/workbox-window.dev.mjs')).Workbox
                 : (await import('./external/js/global/workbox/workbox-window.prod.mjs')).Workbox;
 
