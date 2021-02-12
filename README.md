@@ -58,7 +58,7 @@ Of the **files** in the app directory, only `index.html` and `service-worker.js`
 ## Various
 
 * A personal web page of mine made with **PWA Easy** is running [here](https://mishamosher.com/).
-* The size of the base PWA, bundled, is a bit less than 3 MiB. This includes the OpenMoji font.
+* The size of the base PWA, bundled, is a bit more than 2 MiB. This includes the OpenMoji font.
 
 ## Libraries and frameworks used (kudos to 'em!)
 
