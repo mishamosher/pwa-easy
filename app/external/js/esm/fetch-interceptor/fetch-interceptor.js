@@ -102,6 +102,14 @@ export default class FetchInterceptor {
     }
 
     /**
+     * Clears a default header
+     * @param {string} name
+     */
+    static clearDefaultHeader(name) {
+        delete _defaultHeaders[name];
+    }
+
+    /**
      * Adds an interceptor that is executed before every fetch request
      * @param {function} interceptor
      */
