@@ -3,7 +3,7 @@ this.workbox.rangeRequests = (function (exports, WorkboxError_js, assert_js, log
     'use strict';
 
     try {
-      self['workbox:range-requests:5.1.3'] && _();
+      self['workbox:range-requests:6.1.0'] && _();
     } catch (e) {}
 
     /*
@@ -259,4 +259,3 @@ this.workbox.rangeRequests = (function (exports, WorkboxError_js, assert_js, log
     return exports;
 
 }({}, workbox.core._private, workbox.core._private, workbox.core._private));
-//# sourceMappingURL=workbox-range-requests.dev.js.map

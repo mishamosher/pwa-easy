@@ -3,7 +3,7 @@ this.workbox.navigationPreload = (function (exports, logger_js) {
     'use strict';
 
     try {
-      self['workbox:navigation-preload:5.1.3'] && _();
+      self['workbox:navigation-preload:6.1.0'] && _();
     } catch (e) {}
 
     /*
@@ -99,4 +99,3 @@ this.workbox.navigationPreload = (function (exports, logger_js) {
     return exports;
 
 }({}, workbox.core._private));
-//# sourceMappingURL=workbox-navigation-preload.dev.js.map

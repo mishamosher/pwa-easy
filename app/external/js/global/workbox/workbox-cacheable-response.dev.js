@@ -3,7 +3,7 @@ this.workbox.cacheableResponse = (function (exports, assert_js, WorkboxError_js,
     'use strict';
 
     try {
-      self['workbox:cacheable-response:5.1.3'] && _();
+      self['workbox:cacheable-response:6.1.0'] && _();
     } catch (e) {}
 
     /*
@@ -188,4 +188,3 @@ this.workbox.cacheableResponse = (function (exports, assert_js, WorkboxError_js,
     return exports;
 
 }({}, workbox.core._private, workbox.core._private, workbox.core._private, workbox.core._private));
-//# sourceMappingURL=workbox-cacheable-response.dev.js.map

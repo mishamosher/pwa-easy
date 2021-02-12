@@ -3,7 +3,7 @@ this.workbox.streams = (function (exports, logger_js, assert_js, Deferred_js, ca
     'use strict';
 
     try {
-      self['workbox:streams:5.1.3'] && _();
+      self['workbox:streams:6.1.0'] && _();
     } catch (e) {}
 
     /*
@@ -315,4 +315,3 @@ this.workbox.streams = (function (exports, logger_js, assert_js, Deferred_js, ca
     return exports;
 
 }({}, workbox.core._private, workbox.core._private, workbox.core._private, workbox.core._private));
-//# sourceMappingURL=workbox-streams.dev.js.map
