@@ -5,18 +5,23 @@
  */
 
 const numberFormatKeys = [
-  'style',
+  'compactDisplay',
   'currency',
   'currencyDisplay',
+  'currencySign',
+  'localeMatcher',
+  'notation',
+  'numberingSystem',
+  'signDisplay',
+  'style',
+  'unit',
+  'unitDisplay',
   'useGrouping',
   'minimumIntegerDigits',
   'minimumFractionDigits',
   'maximumFractionDigits',
   'minimumSignificantDigits',
-  'maximumSignificantDigits',
-  'localeMatcher',
-  'formatMatcher',
-  'unit'
+  'maximumSignificantDigits'
 ];
 
 /**
@@ -67,11 +72,15 @@ function isNull (val) {
   return val === null || val === undefined
 }
 
+function isFunction (val) {
+  return typeof val === 'function'
+}
+
 function parseArgs (...args) {
   let locale = null;
   let params = null;
   if (args.length === 1) {
-    if (isObject(args[0]) || Array.isArray(args[0])) {
+    if (isObject(args[0]) || isArray(args[0])) {
       params = args[0];
     } else if (typeof args[0] === 'string') {
       locale = args[0];
@@ -81,7 +90,7 @@ function parseArgs (...args) {
       locale = args[0];
     }
     /* istanbul ignore if */
-    if (isObject(args[1]) || Array.isArray(args[1])) {
+    if (isObject(args[1]) || isArray(args[1])) {
       params = args[1];
     }
   }
@@ -137,8 +146,8 @@ function looseEqual (a, b) {
   const isObjectB = isObject(b);
   if (isObjectA && isObjectB) {
     try {
-      const isArrayA = Array.isArray(a);
-      const isArrayB = Array.isArray(b);
+      const isArrayA = isArray(a);
+      const isArrayB = isArray(b);
       if (isArrayA && isArrayB) {
         return a.length === b.length && a.every((e, i) => {
           return looseEqual(e, b[i])
@@ -162,6 +171,38 @@ function looseEqual (a, b) {
   } else {
     return false
   }
+}
+
+/**
+ * Sanitizes html special characters from input strings. For mitigating risk of XSS attacks.
+ * @param rawText The raw input from the user that should be escaped.
+ */
+function escapeHtml(rawText) {
+  return rawText
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;')
+}
+
+/**
+ * Escapes html tags and special symbols from all provided params which were returned from parseArgs().params.
+ * This method performs an in-place operation on the params object.
+ *
+ * @param {any} params Parameters as provided from `parseArgs().params`.
+ *                     May be either an array of strings or a string->any map.
+ *
+ * @returns The manipulated `params` object.
+ */
+function escapeParams(params) {
+  if(params != null) {
+    Object.keys(params).forEach(key => {
+      if(typeof(params[key]) == 'string') {
+        params[key] = escapeHtml(params[key]);
+      }
+    });
+  }
+  return params
 }
 
 /*  */
@@ -210,7 +251,7 @@ var mixin = {
         // init locale messages via custom blocks
         if (options.__i18n) {
           try {
-            let localeMessages = {};
+            let localeMessages = options.i18n && options.i18n.messages ? options.i18n.messages : {};
             options.__i18n.forEach(resource => {
               localeMessages = merge(localeMessages, JSON.parse(resource));
             });
@@ -244,7 +285,7 @@ var mixin = {
         // init locale messages via custom blocks
         if (options.__i18n) {
           try {
-            let localeMessages = {};
+            let localeMessages = options.i18n && options.i18n.messages ? options.i18n.messages : {};
             options.__i18n.forEach(resource => {
               localeMessages = merge(localeMessages, JSON.parse(resource));
             });
@@ -342,7 +383,7 @@ var interpolationComponent = {
   functional: true,
   props: {
     tag: {
-      type: [String, Boolean],
+      type: [String, Boolean, Object],
       default: 'span'
     },
     path: {
@@ -442,7 +483,7 @@ var numberComponent = {
   functional: true,
   props: {
     tag: {
-      type: [String, Boolean],
+      type: [String, Boolean, Object],
       default: 'span'
     },
     value: {
@@ -1103,6 +1144,7 @@ class VueI18n {
   
   
   
+  
 
   constructor (options = {}) {
     // Auto install if it is not done yet and `window` has `Vue`.
@@ -1150,6 +1192,7 @@ class VueI18n {
     this.pluralizationRules = options.pluralizationRules || {};
     this._warnHtmlInMessage = options.warnHtmlInMessage || 'off';
     this._postTranslation = options.postTranslation || null;
+    this._escapeParameterHtml = options.escapeParameterHtml || false;
 
     /**
      * @param choice {number} a choice index given by the input to $tc: `$tc('path.to.rule', choiceIndex)`
@@ -1228,7 +1271,7 @@ class VueI18n {
             paths.pop();
           }
         });
-      } else if (Array.isArray(message)) {
+      } else if (isArray(message)) {
         message.forEach((item, index) => {
           if (isPlainObject(item)) {
             paths.push(`[${index}]`);
@@ -1416,16 +1459,16 @@ class VueI18n {
     if (!message) { return null }
 
     const pathRet = this._path.getPathValue(message, key);
-    if (Array.isArray(pathRet) || isPlainObject(pathRet)) { return pathRet }
+    if (isArray(pathRet) || isPlainObject(pathRet)) { return pathRet }
 
     let ret;
     if (isNull(pathRet)) {
       /* istanbul ignore else */
       if (isPlainObject(message)) {
         ret = message[key];
-        if (!isString(ret)) {
+        if (!(isString(ret) || isFunction(ret))) {
           if (!this._isSilentTranslationWarn(key) && !this._isSilentFallback(locale, key)) {
-            warn(`Value of key '${key}' is not a string!`);
+            warn(`Value of key '${key}' is not a string or function !`);
           }
           return null
         }
@@ -1434,18 +1477,18 @@ class VueI18n {
       }
     } else {
       /* istanbul ignore else */
-      if (isString(pathRet)) {
+      if (isString(pathRet) || isFunction(pathRet)) {
         ret = pathRet;
       } else {
         if (!this._isSilentTranslationWarn(key) && !this._isSilentFallback(locale, key)) {
-          warn(`Value of key '${key}' is not a string!`);
+          warn(`Value of key '${key}' is not a string or function!`);
         }
         return null
       }
     }
 
     // Check for the existence of links within the translated string
-    if (ret.indexOf('@:') >= 0 || ret.indexOf('@.') >= 0) {
+    if (isString(ret) && (ret.indexOf('@:') >= 0 || ret.indexOf('@.') >= 0)) {
       ret = this._link(locale, message, ret, host, 'raw', values, visitedLinkStack);
     }
 
@@ -1510,7 +1553,7 @@ class VueI18n {
       }
       translated = this._warnDefault(
         locale, linkPlaceholder, translated, host,
-        Array.isArray(values) ? values : [values],
+        isArray(values) ? values : [values],
         interpolateMode
       );
 
@@ -1529,7 +1572,22 @@ class VueI18n {
     return ret
   }
 
+  _createMessageContext (values) {
+    const _list = isArray(values) ? values : [];
+    const _named = isObject(values) ? values : {};
+    const list = (index) => _list[index];
+    const named = (key) => _named[key];
+    return {
+      list,
+      named
+    }
+  }
+
   _render (message, interpolateMode, values, path) {
+    if (isFunction(message)) {
+      return message(this._createMessageContext(values))
+    }
+
     let ret = this._formatter.interpolate(message, values, path);
 
     // If the custom formatter refuses to work - apply the default one
@@ -1668,6 +1726,10 @@ class VueI18n {
     if (!key) { return '' }
 
     const parsedArgs = parseArgs(...values);
+    if(this._escapeParameterHtml) {
+      parsedArgs.params = escapeParams(parsedArgs.params);
+    }
+
     const locale = parsedArgs.locale || _locale;
 
     let ret = this._translate(
@@ -1741,7 +1803,7 @@ class VueI18n {
 
   fetchChoice (message, choice) {
     /* istanbul ignore if */
-    if (!message && !isString(message)) { return null }
+    if (!message || !isString(message)) { return null }
     const choices = message.split('|');
 
     choice = this.getChoiceIndex(choice, choices.length);
@@ -1777,7 +1839,12 @@ class VueI18n {
     if (this._warnHtmlInMessage === 'warn' || this._warnHtmlInMessage === 'error') {
       this._checkLocaleMessage(locale, this._warnHtmlInMessage, message);
     }
-    this._vm.$set(this._vm.messages, locale, merge({}, this._vm.messages[locale] || {}, message));
+    this._vm.$set(this._vm.messages, locale, merge(
+      typeof this._vm.messages[locale] !== 'undefined' && Object.keys(this._vm.messages[locale]).length
+        ? this._vm.messages[locale]
+        : {},
+      message
+    ));
   }
 
   getDateTimeFormat (locale) {
@@ -2080,6 +2147,6 @@ Object.defineProperty(VueI18n, 'availabilities', {
 });
 
 VueI18n.install = install;
-VueI18n.version = '8.18.2';
+VueI18n.version = '8.22.4';
 
 export default VueI18n;
