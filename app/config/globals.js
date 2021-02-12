@@ -1,5 +1,6 @@
 const _startHref = window.location.href;
 const _rootHref = new URL('./', _startHref).href;
+const _isLocalhost = 'localhost' === window.location.hostname;
 
 class GlobalConfig {
     constructor() {
@@ -12,6 +13,10 @@ class GlobalConfig {
 
     static get startURL() {
         return new URL(_startHref);
+    }
+
+    static get isLocalhost() {
+        return _isLocalhost;
     }
 }
 
