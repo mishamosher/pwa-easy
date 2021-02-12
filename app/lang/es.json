@@ -73,6 +73,11 @@
         "page": "Ir a la página {0}",
         "currentPage": "Página actual, página {0}"
       }
+    },
+    "rating": {
+      "ariaLabel": {
+        "icon": "Calificación {0} de {1}"
+      }
     }
   }
 }
