@@ -37,6 +37,7 @@
             display: initial;
         }
     </style>
+    <script src="./utils/global.js"></script>
 </head>
 <body>
 <noscript>
@@ -53,11 +54,10 @@
     document.getElementById('app').removeAttribute('style');
 
     import './config/globals.js';
-    import {StartupUtils} from "./utils/startup.js";
+    import StartupUtils from "./utils/startup.js";
 
     StartupUtils.addHeaders();
-
-    const sleep = ms => new Promise(resolve => { setTimeout(resolve, ms) });
+    utils.polyfillSafari();
 
     (async () => {
         const startApp = async () => {
@@ -77,13 +77,19 @@
 
             await wb.register();
 
-            // Workaround for the lack of an 'activated' event. The app requires the ServiceWorker when there is
-            // no internet access. The ServiceWorker also performs various URL rewrites to reduce the network usage.
+            // Workaround for the lack of a consistent 'activated' event. The app requires the ServiceWorker when there
+            // is no internet access. The ServiceWorker also performs various URL rewrites to reduce the network usage.
             // https://github.com/w3c/ServiceWorker/issues/1222
             // https://github.com/w3c/ServiceWorker/issues/1247
             const swr = await window.navigator.serviceWorker.ready;
-            while (swr.active.state !== 'activated') await sleep(0);
-            await startApp();
+            if (swr.active.state === 'activated') await startApp();
+            else {
+                const activatedHandler = async () => {
+                    wb.removeEventListener('activated', activatedHandler);
+                    await startApp();
+                };
+                wb.addEventListener('activated', activatedHandler);
+            }
         } else await startApp(); // fall back to online-only mode
     })();
 </script>
