@@ -3,17 +3,19 @@ importScripts('./bundle/precacheBundle-HASH.js', './bundle/precacheList-HASH.js'
 
 const rootURL = new URL('./', self.location.href);
 
-importScripts('./external/js/global/workbox/workbox-sw.js');
+importScripts('./external/js/global/workbox/workbox-sw.js', './utils/global.js');
 
-const scripts = [
-    './external/js/global/pako/pako_inflate.js',
-    './external/js/global/zip-stream/read.js',
-    './external/js/global/mime/index.js'
+utils.polyfillSafari();
+
+let scripts = [
+    './external/js/global/pako/pako_inflate.min.js',
+    './external/js/global/zip-stream/read.min.js',
+    './external/js/global/mime/index.min.js'
 ];
 
-const isLocalhost = 'localhost' === self.location.hostname;
+const isProduction = 'localhost' !== self.location.hostname;
 
-if (!isLocalhost) scripts.splice(0, scripts.length, ...scripts.map(x => x.replace(/js$/, 'min.js')));
+if (!isProduction) scripts = scripts.map(x => x.replace(/min.js$/, 'js'));
 
 importScripts(...scripts);
 
@@ -31,14 +33,14 @@ const precacheController = new workbox.precaching.PrecacheController();
 precacheController.addToCacheList(precacheList);
 
 class SWHelper {
-    static async install() {
+    static async install(event) {
         await SWHelper.updateCacheFromZipBundle();
-        await precacheController.install();
+        await precacheController.install(event);
         self.skipWaiting();
     }
 
-    static async activate() {
-        await precacheController.activate();
+    static async activate(event) {
+        await precacheController.activate(event);
         await self.clients.claim();
     }
 
@@ -48,8 +50,12 @@ class SWHelper {
         event.respondWith(SWHelper.precachedResponse(precachedURL));
     }
 
+    /**
+     * @param {string|URL} url
+     * @returns {string|undefined}
+     */
     static precacheKey(url) {
-        for (const urlVariation of SWHelper.urlVariations(url)) {
+        for (const urlVariation of SWHelper.precacheUrlVariations(url)) {
             const possibleCacheKey = precacheController.getCacheKeyForURL(urlVariation);
             if (possibleCacheKey) return possibleCacheKey;
         }
@@ -64,12 +70,15 @@ class SWHelper {
         return uri ? uri.split('.').pop().toLowerCase() : null;
     }
 
-    static* urlVariations(url) {
-        url = new URL(url, self.location.href);
-        url.hash = ''; // never sent to server, so let's always remove it
+    /**
+     * @param {string|URL} url
+     * @returns {Generator<string, void, *>}
+     */
+    static* precacheUrlVariations(url) {
+        url = SWHelper.urlOriginPathname(url); // precached urls are direct resources containing origin+pathnames only
         yield url.href;
 
-        if (!isLocalhost) { // if running from production, try to retrieve minified resources
+        if (isProduction) { // if running from production, try to retrieve minified resources
             let extension = SWHelper.uriExtension(url.pathname);
             if (['js', 'mjs', 'css'].includes(extension)) {
                 const minUrl = new URL(url.href);
@@ -124,8 +133,6 @@ class SWHelper {
             return;
         }
 
-        const promises = [];
-
         const cacheData = entry => {
             if (entry.directory) return null;
 
@@ -137,14 +144,14 @@ class SWHelper {
             toBePrecached.delete(entryUrl);
 
             return {entryUrl, entryKey};
-        }
+        };
 
         if (trusted) {
             for await (const entry of ZipBlobReader(zipBlob)) {
                 const cd = cacheData(entry);
                 if (cd === null) continue;
 
-                promises.push(cache.put(cd.entryKey, SWHelper.zipResponse(entry.stream(), cd.entryUrl, entry)));
+                await cache.put(cd.entryKey, SWHelper.zipResponse(entry.stream(), cd.entryUrl, entry));
             }
         } else {
             try {
@@ -152,14 +159,12 @@ class SWHelper {
                     const cd = cacheData(entry);
                     if (cd === null) continue;
 
-                    promises.push(SWHelper.putToCache(cache, entry, cd.entryUrl, cd.entryKey));
+                    await SWHelper.putToCache(cache, entry, cd.entryUrl, cd.entryKey);
                 }
             } catch (e) {
                 console.warn(`The zipped bundle could not be unzipped without errors. ${e}`)
             }
         }
-
-        await Promise.all(promises);
     }
 
     static async putToCache(cache, entry, entryUrl, entryKey) {
@@ -210,7 +215,7 @@ class SWHelper {
     }
 
     /**
-     * Removes the hash part of an URL and returns a string representing its href.
+     * Removes the hash part of an URL and returns an URL representing its href.
      *
      * @param {string|URL} url
      * @returns {URL}
@@ -219,6 +224,30 @@ class SWHelper {
         url = typeof url === 'string' ? new URL(url) : new URL(url.href);
         url.hash = '';
         return url;
+    }
+
+    /**
+     * Removes the search part of an URL and returns an URL representing its href.
+     *
+     * @param {string|URL} url
+     * @returns {URL}
+     */
+    static urlWithoutSearch(url) {
+        url = typeof url === 'string' ? new URL(url) : new URL(url.href);
+        url.search = '';
+        return url;
+    }
+
+    /**
+     * Removes the hash and search part of an URL and returns an URL representing its href.
+     *
+     * @param {string|URL} url
+     * @returns {URL}
+     */
+    static urlOriginPathname(url) {
+        url = typeof url === 'string' ? new URL(url) : new URL(url.href);
+        url.search = '';
+        return new URL(`${url.origin}${url.pathname}`);
     }
 
     static registerWorkbox() {
@@ -237,48 +266,55 @@ class SWHelper {
          */
         const handler = precacheController.createHandlerBoundToURL(rootURL.pathname);
         const navigationRoute = new workbox.routing.NavigationRoute(async context => {
-            const url = SWHelper.urlWithoutHash(context.url); // web servers never receive the URL hash
+            // If the user requests the rootURL, resolve immediately
+            if (context.url.pathname === rootURL.pathname) return await handler(context);
+
+            // If the user requests ./index.html, redirect immediately
+            if (context.url.pathname === `${rootURL.pathname}index.html`) return Response.redirect(rootURL.pathname);
 
             // If the user requests a precached resource, return it as-is
-            const precachedURL = SWHelper.precacheKey(context.url.href);
+            const urlFile = SWHelper.urlOriginPathname(context.url); // url origin+pathname, used for cache file matching
+            const precachedURL = SWHelper.precacheKey(urlFile);
             if (precachedURL) return await SWHelper.precachedResponse(precachedURL);
 
-            // If the user requests a runtime-cached resource that expires, return a fresh copy
-            const cache = await self.caches.open(expiresCache);
-            const response = await cache.match(url.href);
-            if (response) return fetch(url.href);
-
-            // Else, fallback to ./index.html
-            if (context.url.pathname === `${rootURL.pathname}index.html`) return Response.redirect(rootURL.pathname);
-            if (context.url.pathname !== rootURL.pathname) {
-                const redirectURL = new URL(url.href);
+            try {
+                // Try to fetch the request
+                return await fetch(context.request, {redirect: 'manual'});
+            } catch {
+                // In case of errors (most certainly we are offline), redirect to ./ with sitePath set
+                const redirectURL = SWHelper.urlWithoutHash(context.url); // web servers never receive the URL hash
+                redirectURL.searchParams.set('sitePath', redirectURL.pathname.substring(rootURL.pathname.length))
                 redirectURL.pathname = rootURL.pathname;
-                redirectURL.searchParams.set('sitePath', url.pathname.substring(rootURL.pathname.length))
                 return Response.redirect(redirectURL.href);
             }
-            return await handler(context);
         });
         workbox.routing.registerRoute(navigationRoute);
 
         // use a StaleWhileRevalidate strategy with expiration for all the requests not matched by any other rule
-        workbox.routing.setDefaultHandler(new workbox.strategies.StaleWhileRevalidate({
+        // applied only to requests with the same rootURL
+        let defaultHandlerSameRoot = new workbox.strategies.StaleWhileRevalidate({
             cacheName: expiresCache,
             plugins: [
                 new workbox.expiration.ExpirationPlugin({
                     maxEntries: 100,
-                    maxAgeSeconds: 7 * 24 * 60 * 60 // one week
+                    mmaxAgeSeconds: 7 * 24 * 60 * 60 // one week
                 })
             ]
-        }));
+        });
+        workbox.routing.setDefaultHandler((args) => {
+            return args.request.url.startsWith(rootURL.href)
+                ? defaultHandlerSameRoot.handle(args)
+                : fetch(args.request);
+        });
     }
 }
 
 self.addEventListener('install', event => {
-    event.waitUntil(SWHelper.install());
+    event.waitUntil(SWHelper.install(event));
 });
 
 self.addEventListener('activate', event => {
-    event.waitUntil(SWHelper.activate());
+    event.waitUntil(SWHelper.activate(event));
 });
 
 self.addEventListener('fetch', event => {
