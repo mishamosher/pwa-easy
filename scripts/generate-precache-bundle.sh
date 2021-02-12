@@ -43,8 +43,8 @@ cd ..
     find . -type f -iwholename "./external/css/fontawesome/webfonts/*" -print
     # Roboto webfonts
     find . -type f -iwholename "./external/css/roboto/fonts/*" -print
-    # Openmoji SVGs
-    # find . -type f -iwholename "./external/img/openmoji/*.svg" -print
+    # OpenMoji webfont
+    find . -type f -iwholename "./external/img/openmoji/*.ttf" -print
 
     # Generate precache for all files not under [external|bundle] directories and that don't start with a dot (.)
     # The file service-worker.js is also omitted
