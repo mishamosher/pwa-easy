@@ -8,7 +8,7 @@ importScripts('./external/js/global/workbox/workbox-sw.js', './utils/global.js')
 utils.polyfillSafari();
 
 let scripts = [
-    './external/js/global/pako/pako_inflate.min.js',
+    './external/js/global/fflate/index.min.js',
     './external/js/global/zip-stream/read.min.js',
     './external/js/global/mime/index.min.js'
 ];

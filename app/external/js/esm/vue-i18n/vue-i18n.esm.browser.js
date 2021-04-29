@@ -103,11 +103,8 @@ function looseClone (obj) {
 }
 
 function remove (arr, item) {
-  if (arr.length) {
-    const index = arr.indexOf(item);
-    if (index > -1) {
-      return arr.splice(index, 1)
-    }
+  if (arr.delete(item)) {
+    return arr
   }
 }
 
@@ -349,6 +346,12 @@ var mixin = {
     } else if (options.parent && options.parent.$i18n && options.parent.$i18n instanceof VueI18n) {
       this._i18n.subscribeDataChanging(this);
       this._subscribing = true;
+    }
+  },
+
+  mounted () {
+    if (this !== this.$root && this.$options.__INTLIFY_META__ && this.$el) {
+      this.$el.setAttribute('data-intlify', this.$options.__INTLIFY_META__);
     }
   },
 
@@ -1089,7 +1092,7 @@ class I18nPath {
       let i = 0;
       while (i < length) {
         const value = last[paths[i]];
-        if (value === undefined) {
+        if (value === undefined || value === null) {
           return null
         }
         last = value;
@@ -1184,7 +1187,7 @@ class VueI18n {
     this._dateTimeFormatters = {};
     this._numberFormatters = {};
     this._path = new I18nPath();
-    this._dataListeners = [];
+    this._dataListeners = new Set();
     this._componentInstanceCreatedListener = options.componentInstanceCreatedListener || null;
     this._preserveDirectiveContent = options.preserveDirectiveContent === undefined
       ? false
@@ -1313,7 +1316,7 @@ class VueI18n {
   }
 
   subscribeDataChanging (vm) {
-    this._dataListeners.push(vm);
+    this._dataListeners.add(vm);
   }
 
   unsubscribeDataChanging (vm) {
@@ -1323,12 +1326,11 @@ class VueI18n {
   watchI18nData () {
     const self = this;
     return this._vm.$watch('$data', () => {
-      let i = self._dataListeners.length;
-      while (i--) {
+      self._dataListeners.forEach(e => {
         Vue.nextTick(() => {
-          self._dataListeners[i] && self._dataListeners[i].$forceUpdate();
+          e && e.$forceUpdate();
         });
-      }
+      });
     }, { deep: true })
   }
 
@@ -2147,6 +2149,6 @@ Object.defineProperty(VueI18n, 'availabilities', {
 });
 
 VueI18n.install = install;
-VueI18n.version = '8.22.4';
+VueI18n.version = '8.24.4';
 
 export default VueI18n;

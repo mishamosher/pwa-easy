@@ -1039,8 +1039,12 @@ var defaultMenuProps = __assign(__assign({}, _VSelect_VSelect__WEBPACK_IMPORTED_
         return this.lazySearch;
       },
       set: function set(val) {
-        this.lazySearch = val;
-        this.$emit('update:search-input', val);
+        // emit update event only when the new
+        // search value is different from previous
+        if (this.lazySearch !== val) {
+          this.lazySearch = val;
+          this.$emit('update:search-input', val);
+        }
       }
     },
     isAnyValueAllowed: function isAnyValueAllowed() {
@@ -1062,7 +1066,7 @@ var defaultMenuProps = __assign(__assign({}, _VSelect_VSelect__WEBPACK_IMPORTED_
       return __assign(__assign({}, defaultMenuProps), props);
     },
     searchIsDirty: function searchIsDirty() {
-      return this.internalSearch != null;
+      return this.internalSearch != null && this.internalSearch !== '';
     },
     selectedItem: function selectedItem() {
       var _this = this;
@@ -1091,6 +1095,7 @@ var defaultMenuProps = __assign(__assign({}, _VSelect_VSelect__WEBPACK_IMPORTED_
         this.$refs.input && this.$refs.input.select();
       } else {
         document.removeEventListener('copy', this.onCopy);
+        this.$refs.input && this.$refs.input.blur();
         this.updateSelf();
       }
     },
@@ -1228,10 +1233,14 @@ var defaultMenuProps = __assign(__assign({}, _VSelect_VSelect__WEBPACK_IMPORTED_
     },
     onKeyDown: function onKeyDown(e) {
       var keyCode = e.keyCode;
-      _VSelect_VSelect__WEBPACK_IMPORTED_MODULE_1__["default"].options.methods.onKeyDown.call(this, e); // The ordering is important here
+
+      if (e.ctrlKey || ![_util_helpers__WEBPACK_IMPORTED_MODULE_4__["keyCodes"].home, _util_helpers__WEBPACK_IMPORTED_MODULE_4__["keyCodes"].end].includes(keyCode)) {
+        _VSelect_VSelect__WEBPACK_IMPORTED_MODULE_1__["default"].options.methods.onKeyDown.call(this, e);
+      } // The ordering is important here
       // allows new value to be updated
       // and then moves the index to the
       // proper location
+
 
       this.changeSelectedIndex(keyCode);
     },
@@ -1954,7 +1963,11 @@ var __assign = undefined && undefined.__assign || function () {
       default: true
     },
     mandatory: Boolean,
-    shift: Boolean
+    shift: Boolean,
+    tag: {
+      type: String,
+      default: 'div'
+    }
   },
   data: function data() {
     return {
@@ -2006,6 +2019,7 @@ var __assign = undefined && undefined.__assign || function () {
       props: {
         activeClass: this.activeClass,
         mandatory: Boolean(this.mandatory || this.value !== undefined),
+        tag: this.tag,
         value: this.internalValue
       },
       on: {
@@ -3293,13 +3307,15 @@ var __spread = undefined && undefined.__spread || function () {
     genDays: function genDays() {
       var _this = this;
 
-      var d = this.days[0];
-      var days = this.days.slice();
-      days = new Array(this.parsedCategories.length);
-      days.fill(d);
-      return days.map(function (v, i) {
-        return _this.genDay(v, 0, i);
+      var days = [];
+      this.days.forEach(function (d) {
+        var day = new Array(_this.parsedCategories.length || 1);
+        day.fill(d);
+        days.push.apply(days, __spread(day.map(function (v, i) {
+          return _this.genDay(v, 0, i);
+        })));
       });
+      return days;
     },
     genDay: function genDay(day, index, categoryIndex) {
       var _this = this;
@@ -7439,6 +7455,15 @@ var __assign = undefined && undefined.__assign || function () {
         data = _a.data,
         listeners = _a.listeners;
     var children = [];
+    var icon = props.offIcon;
+    if (props.indeterminate) icon = props.indeterminateIcon;else if (props.value) icon = props.onIcon;
+    children.push(h(_VIcon__WEBPACK_IMPORTED_MODULE_3__["VIcon"], _mixins_colorable__WEBPACK_IMPORTED_MODULE_4__["default"].options.methods.setTextColor(props.value && props.color, {
+      props: {
+        disabled: props.disabled,
+        dark: props.dark,
+        light: props.light
+      }
+    }), icon));
 
     if (props.ripple && !props.disabled) {
       var ripple_1 = h('div', _mixins_colorable__WEBPACK_IMPORTED_MODULE_4__["default"].options.methods.setTextColor(props.color, {
@@ -7453,21 +7478,11 @@ var __assign = undefined && undefined.__assign || function () {
       children.push(ripple_1);
     }
 
-    var icon = props.offIcon;
-    if (props.indeterminate) icon = props.indeterminateIcon;else if (props.value) icon = props.onIcon;
-    children.push(h(_VIcon__WEBPACK_IMPORTED_MODULE_3__["VIcon"], _mixins_colorable__WEBPACK_IMPORTED_MODULE_4__["default"].options.methods.setTextColor(props.value && props.color, {
-      props: {
-        disabled: props.disabled,
-        dark: props.dark,
-        light: props.light
-      }
-    }), icon));
-    var classes = {
-      'v-simple-checkbox': true,
-      'v-simple-checkbox--disabled': props.disabled
-    };
     return h('div', Object(_util_mergeData__WEBPACK_IMPORTED_MODULE_6__["default"])(data, {
-      class: classes,
+      class: {
+        'v-simple-checkbox': true,
+        'v-simple-checkbox--disabled': props.disabled
+      },
       on: {
         click: function click(e) {
           e.stopPropagation();
@@ -7479,7 +7494,9 @@ var __assign = undefined && undefined.__assign || function () {
           }
         }
       }
-    }), children);
+    }), [h('div', {
+      staticClass: 'v-input--selection-controls__input'
+    }, children)]);
   }
 }));
 
@@ -8069,6 +8086,7 @@ var __assign = undefined && undefined.__assign || function () {
         props: {
           dark: this.dark,
           light: this.light,
+          disabled: this.disabled,
           swatches: this.swatches,
           color: this.internalValue,
           maxHeight: this.swatchesMaxHeight
@@ -8688,6 +8706,7 @@ var black = Object(_util__WEBPACK_IMPORTED_MODULE_3__["fromHex"])('#000000').rgb
         return parseDefaultColors(_util_colors__WEBPACK_IMPORTED_MODULE_2__["default"]);
       }
     },
+    disabled: Boolean,
     color: Object,
     maxWidth: [Number, String],
     maxHeight: [Number, String]
@@ -8712,7 +8731,7 @@ var black = Object(_util__WEBPACK_IMPORTED_MODULE_3__["fromHex"])('#000000').rgb
         on: {
           // TODO: Less hacky way of catching transparent
           click: function click() {
-            return _this.$emit('update:color', Object(_util__WEBPACK_IMPORTED_MODULE_3__["fromHex"])(color === 'transparent' ? '#00000000' : color));
+            return _this.disabled || _this.$emit('update:color', Object(_util__WEBPACK_IMPORTED_MODULE_3__["fromHex"])(color === 'transparent' ? '#00000000' : color));
           }
         }
       }, [content]);
@@ -9038,6 +9057,9 @@ var __assign = undefined && undefined.__assign || function () {
     menuCanShow: function menuCanShow() {
       if (!this.isFocused) return false;
       return this.hasDisplayedItems || !!this.$slots['no-data'] && !this.hideNoData;
+    },
+    searchIsDirty: function searchIsDirty() {
+      return this.internalSearch != null;
     }
   },
   methods: {
@@ -9096,8 +9118,12 @@ var __assign = undefined && undefined.__assign || function () {
     },
     onKeyDown: function onKeyDown(e) {
       var keyCode = e.keyCode;
-      _VSelect_VSelect__WEBPACK_IMPORTED_MODULE_1__["default"].options.methods.onKeyDown.call(this, e); // If user is at selection index of 0
+
+      if (e.ctrlKey || ![_util_helpers__WEBPACK_IMPORTED_MODULE_3__["keyCodes"].home, _util_helpers__WEBPACK_IMPORTED_MODULE_3__["keyCodes"].end].includes(keyCode)) {
+        _VSelect_VSelect__WEBPACK_IMPORTED_MODULE_1__["default"].options.methods.onKeyDown.call(this, e);
+      } // If user is at selection index of 0
       // create a new tag
+
 
       if (this.multiple && keyCode === _util_helpers__WEBPACK_IMPORTED_MODULE_3__["keyCodes"].left && this.$refs.input.selectionStart === 0) {
         this.updateSelf();
@@ -9128,7 +9154,12 @@ var __assign = undefined && undefined.__assign || function () {
       if (this.editingIndex > -1) {
         this.updateEditing();
       } else {
-        _VAutocomplete_VAutocomplete__WEBPACK_IMPORTED_MODULE_2__["default"].options.methods.selectItem.call(this, item);
+        _VAutocomplete_VAutocomplete__WEBPACK_IMPORTED_MODULE_2__["default"].options.methods.selectItem.call(this, item); // if selected item contains search value,
+        // remove the search string
+
+        if (this.internalSearch && this.multiple && this.getText(item).toLocaleLowerCase().includes(this.internalSearch.toLocaleLowerCase())) {
+          this.internalSearch = null;
+        }
       }
     },
     setSelectedItems: function setSelectedItems() {
@@ -9163,9 +9194,10 @@ var __assign = undefined && undefined.__assign || function () {
     updateTags: function updateTags() {
       var menuIndex = this.getMenuIndex(); // If the user is not searching
       // and no menu item is selected
+      // or if the search is empty
       // do nothing
 
-      if (menuIndex < 0 && !this.searchIsDirty) return;
+      if (menuIndex < 0 && !this.searchIsDirty || !this.internalSearch) return;
 
       if (this.editingIndex > -1) {
         return this.updateEditing();
@@ -9198,6 +9230,10 @@ var __assign = undefined && undefined.__assign || function () {
         event.preventDefault();
         _VSelect_VSelect__WEBPACK_IMPORTED_MODULE_1__["default"].options.methods.selectItem.call(this, pastedItemText);
       }
+    },
+    clearableCallback: function clearableCallback() {
+      this.editingIndex = -1;
+      _VAutocomplete_VAutocomplete__WEBPACK_IMPORTED_MODULE_2__["default"].options.methods.clearableCallback.call(this);
     }
   }
 }));
@@ -9814,7 +9850,7 @@ var __spread = undefined && undefined.__spread || function () {
       // Make sure we don't try to display non-existant page if items suddenly change
       // TODO: Could possibly move this to pageStart/pageStop?
       if (this.serverItemsLength === -1 && items.length <= this.pageStart) {
-        this.internalOptions.page = Math.max(1, this.internalOptions.page - 1);
+        this.internalOptions.page = Math.max(1, Math.ceil(items.length / this.internalOptions.itemsPerPage)) || 1; // Prevent NaN
       }
 
       return items.slice(this.pageStart, this.pageStop);
@@ -13149,6 +13185,7 @@ __webpack_require__.r(__webpack_exports__);
       var prevMonthYear = this.displayedMonth ? this.displayedYear : this.displayedYear - 1;
       var prevMonth = (this.displayedMonth + 11) % 12;
       var firstDayFromPreviousMonth = new Date(this.displayedYear, this.displayedMonth, 0).getDate();
+      var cellsInRow = this.showWeek ? 8 : 7;
 
       while (day--) {
         var date = prevMonthYear + "-" + Object(_util__WEBPACK_IMPORTED_MODULE_2__["pad"])(prevMonth + 1) + "-" + Object(_util__WEBPACK_IMPORTED_MODULE_2__["pad"])(firstDayFromPreviousMonth - day);
@@ -13159,11 +13196,11 @@ __webpack_require__.r(__webpack_exports__);
         var date = this.displayedYear + "-" + Object(_util__WEBPACK_IMPORTED_MODULE_2__["pad"])(this.displayedMonth + 1) + "-" + Object(_util__WEBPACK_IMPORTED_MODULE_2__["pad"])(day);
         rows.push(this.$createElement('td', [this.genButton(date, true, 'date', this.formatter)]));
 
-        if (rows.length % (this.showWeek ? 8 : 7) === 0) {
+        if (rows.length % cellsInRow === 0) {
           children.push(this.genTR(rows));
           rows = [];
 
-          if (this.showWeek && day < daysInMonth) {
+          if (this.showWeek && (day < daysInMonth || this.showAdjacentMonths)) {
             rows.push(this.genWeekNumber(this.getWeekNumber(day + 7)));
           }
         }
@@ -13173,7 +13210,7 @@ __webpack_require__.r(__webpack_exports__);
       var nextMonth = (this.displayedMonth + 1) % 12;
       var nextMonthDay = 1;
 
-      while (rows.length < 7) {
+      while (rows.length < cellsInRow) {
         var date = nextMonthYear + "-" + Object(_util__WEBPACK_IMPORTED_MODULE_2__["pad"])(nextMonth + 1) + "-" + Object(_util__WEBPACK_IMPORTED_MODULE_2__["pad"])(nextMonthDay++);
         rows.push(this.$createElement('td', this.showAdjacentMonths ? [this.genButton(date, true, 'date', this.formatter, true)] : []));
       }
@@ -14008,11 +14045,11 @@ var __spread = undefined && undefined.__spread || function () {
         return _this.$createElement('div', _this.setBackgroundColor(color));
       })) : null;
     },
-    isValidScroll: function isValidScroll(e, calculateTableDate) {
-      var tableDate = calculateTableDate(e.deltaY); // tableDate is 'YYYY-MM' for DateTable and 'YYYY' for MonthTable
+    isValidScroll: function isValidScroll(value, calculateTableDate) {
+      var tableDate = calculateTableDate(value); // tableDate is 'YYYY-MM' for DateTable and 'YYYY' for MonthTable
 
       var sanitizeType = tableDate.split('-').length === 1 ? 'year' : 'month';
-      return e.deltaY === 0 || e.deltaY < 0 && (this.min ? tableDate >= Object(_util__WEBPACK_IMPORTED_MODULE_5__["sanitizeDateString"])(this.min, sanitizeType) : true) || e.deltaY > 0 && (this.max ? tableDate <= Object(_util__WEBPACK_IMPORTED_MODULE_5__["sanitizeDateString"])(this.max, sanitizeType) : true);
+      return value === 0 || value < 0 && (this.min ? tableDate >= Object(_util__WEBPACK_IMPORTED_MODULE_5__["sanitizeDateString"])(this.min, sanitizeType) : true) || value > 0 && (this.max ? tableDate <= Object(_util__WEBPACK_IMPORTED_MODULE_5__["sanitizeDateString"])(this.max, sanitizeType) : true);
     },
     wheel: function wheel(e, calculateTableDate) {
       this.$emit('update:table-date', calculateTableDate(e.deltaY));
@@ -14034,10 +14071,10 @@ var __spread = undefined && undefined.__spread || function () {
         name: 'touch',
         value: {
           left: function left(e) {
-            return e.offsetX < -15 && _this.touch(1, calculateTableDate);
+            return e.offsetX < -15 && _this.isValidScroll(1, calculateTableDate) && _this.touch(1, calculateTableDate);
           },
           right: function right(e) {
-            return e.offsetX > 15 && _this.touch(-1, calculateTableDate);
+            return e.offsetX > 15 && _this.isValidScroll(-1, calculateTableDate) && _this.touch(-1, calculateTableDate);
           }
         }
       };
@@ -14050,7 +14087,7 @@ var __spread = undefined && undefined.__spread || function () {
           wheel: function wheel(e) {
             e.preventDefault();
 
-            if (_this.isValidScroll(e, calculateTableDate)) {
+            if (_this.isValidScroll(e.deltaY, calculateTableDate)) {
               _this.wheelThrottle(e, calculateTableDate);
             }
           }
@@ -15179,7 +15216,8 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_6__["default"])(_m
       class: this.classes,
       attrs: {
         tabindex: this.isDisabled ? -1 : null,
-        type: 'button'
+        type: 'button',
+        'aria-expanded': this.isActive
       },
       directives: [{
         name: 'ripple',
@@ -15517,7 +15555,7 @@ var __spread = undefined && undefined.__spread || function () {
     text: function text() {
       var _this = this;
 
-      if (!this.isDirty) return [this.placeholder];
+      if (!this.isDirty && (this.isFocused || !this.hasLabel)) return [this.placeholder];
       return this.internalArrayValue.map(function (file) {
         var _a = file.name,
             name = _a === void 0 ? '' : _a,
@@ -17290,9 +17328,9 @@ var hasIntersect = typeof window !== 'undefined' && 'IntersectionObserver' in wi
 
       image.onerror = this.onError;
       this.hasError = false;
-      image.src = this.normalisedSrc.src;
       this.sizes && (image.sizes = this.sizes);
       this.normalisedSrc.srcset && (image.srcset = this.normalisedSrc.srcset);
+      image.src = this.normalisedSrc.src;
       this.aspectRatio || this.pollForSize(image);
       this.getSrc();
     },
@@ -18286,17 +18324,12 @@ var __assign = undefined && undefined.__assign || function () {
   },
   methods: {
     genContent: function genContent() {
-      var slot = Object(_util_helpers__WEBPACK_IMPORTED_MODULE_4__["getSlot"])(this);
-      /* istanbul ignore if */
-
-      if (!this.transition) return slot;
-      var children = [];
-      if (this.isActive) children.push(slot);
-      return this.$createElement('transition', {
+      var children = this.isActive && Object(_util_helpers__WEBPACK_IMPORTED_MODULE_4__["getSlot"])(this);
+      return this.transition ? this.$createElement('transition', {
         props: {
           name: this.transition
         }
-      }, children);
+      }, children) : children;
     },
     onObserve: function onObserve(entries, observer, isIntersecting) {
       if (this.isActive) return;
@@ -18871,7 +18904,7 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_9__["default"])(_m
       if (this.$attrs.hasOwnProperty('role')) {// do nothing, role already provided
       } else if (this.isInNav) {// do nothing, role is inherit
       } else if (this.isInGroup) {
-        attrs.role = 'listitem';
+        attrs.role = 'option';
         attrs['aria-selected'] = String(this.isActive);
       } else if (this.isInMenu) {
         attrs.role = this.isClickable ? 'menuitem' : undefined;
@@ -22268,13 +22301,6 @@ var __spread = undefined && undefined.__spread || function () {
       return [this.genInput(), this.genTrackContainer(), this.genSteps(), Object(_util_helpers__WEBPACK_IMPORTED_MODULE_2__["createRange"])(2).map(function (index) {
         var value = _this.internalValue[index];
 
-        var onDrag = function onDrag(e) {
-          _this.isActive = true;
-          _this.activeThumb = index;
-
-          _this.onSliderMouseDown(e);
-        };
-
         var onFocus = function onFocus(e) {
           _this.isFocused = true;
           _this.activeThumb = index;
@@ -22292,7 +22318,7 @@ var __spread = undefined && undefined.__spread || function () {
         var valueWidth = _this.inputWidth[index];
         var isActive = _this.isActive && _this.activeThumb === index;
         var isFocused = _this.isFocused && _this.activeThumb === index;
-        return _this.genThumbContainer(value, valueWidth, isActive, isFocused, onDrag, onFocus, onBlur, "thumb_" + index);
+        return _this.genThumbContainer(value, valueWidth, isActive, isFocused, onFocus, onBlur, "thumb_" + index);
       })];
     },
     reevaluateSelected: function reevaluateSelected(value) {
@@ -22302,11 +22328,24 @@ var __spread = undefined && undefined.__spread || function () {
       thumbRef.focus();
     },
     onSliderMouseDown: function onSliderMouseDown(e) {
-      var value = this.parseMouseMove(e).value;
+      var _this = this;
+
+      var _a;
+
+      var value = this.parseMouseMove(e);
       this.reevaluateSelected(value);
       this.oldValue = this.internalValue;
-      this.keyPressed = 2;
       this.isActive = true;
+
+      if ((_a = e.target) === null || _a === void 0 ? void 0 : _a.matches('.v-slider__thumb-container, .v-slider__thumb-container *')) {
+        this.thumbPressed = true;
+      } else {
+        window.clearTimeout(this.mouseTimeout);
+        this.mouseTimeout = window.setTimeout(function () {
+          _this.thumbPressed = true;
+        }, 300);
+      }
+
       var mouseUpOptions = _util_helpers__WEBPACK_IMPORTED_MODULE_2__["passiveSupported"] ? {
         passive: true,
         capture: true
@@ -22314,16 +22353,10 @@ var __spread = undefined && undefined.__spread || function () {
       var mouseMoveOptions = _util_helpers__WEBPACK_IMPORTED_MODULE_2__["passiveSupported"] ? {
         passive: true
       } : false;
-
-      if ('touches' in e) {
-        this.app.addEventListener('touchmove', this.onMouseMove, mouseMoveOptions);
-        Object(_util_helpers__WEBPACK_IMPORTED_MODULE_2__["addOnceEventListener"])(this.app, 'touchend', this.onSliderMouseUp, mouseUpOptions);
-      } else {
-        this.onMouseMove(e);
-        this.app.addEventListener('mousemove', this.onMouseMove, mouseMoveOptions);
-        Object(_util_helpers__WEBPACK_IMPORTED_MODULE_2__["addOnceEventListener"])(this.app, 'mouseup', this.onSliderMouseUp, mouseUpOptions);
-      }
-
+      var isTouchEvent = 'touches' in e;
+      this.onMouseMove(e);
+      this.app.addEventListener(isTouchEvent ? 'touchmove' : 'mousemove', this.onMouseMove, mouseMoveOptions);
+      Object(_util_helpers__WEBPACK_IMPORTED_MODULE_2__["addOnceEventListener"])(this.app, isTouchEvent ? 'touchend' : 'mouseup', this.onSliderMouseUp, mouseUpOptions);
       this.$emit('start', this.internalValue);
     },
     onSliderClick: function onSliderClick(e) {
@@ -22333,27 +22366,20 @@ var __spread = undefined && undefined.__spread || function () {
           return;
         }
 
-        var _a = this.parseMouseMove(e),
-            value = _a.value,
-            isInsideTrack = _a.isInsideTrack;
-
-        if (isInsideTrack) {
-          this.reevaluateSelected(value);
-        }
-
+        var value = this.parseMouseMove(e);
+        this.reevaluateSelected(value);
         this.setInternalValue(value);
         this.$emit('change', this.internalValue);
       }
     },
     onMouseMove: function onMouseMove(e) {
-      var _a = this.parseMouseMove(e),
-          value = _a.value,
-          isInsideTrack = _a.isInsideTrack;
+      var value = this.parseMouseMove(e);
 
-      if (isInsideTrack && this.activeThumb === null) {
-        this.activeThumb = this.getIndexOfClosestValue(this.internalValue, value);
+      if (e.type === 'mousemove') {
+        this.thumbPressed = true;
       }
 
+      this.activeThumb = this.getIndexOfClosestValue(this.internalValue, value);
       this.setInternalValue(value);
     },
     onKeyDown: function onKeyDown(e) {
@@ -22631,7 +22657,6 @@ __webpack_require__.r(__webpack_exports__);
 
       return this.$createElement(_VIcon__WEBPACK_IMPORTED_MODULE_1__["default"], this.setTextColor(this.getColor(props), {
         attrs: {
-          tabindex: -1,
           'aria-label': this.$vuetify.lang.t(this.iconLabel, i + 1, Number(this.length))
         },
         directives: this.directives,
@@ -22964,7 +22989,13 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_14__["default"])(_
       return "list-" + this._uid;
     },
     computedCounterValue: function computedCounterValue() {
-      return this.multiple ? this.selectedItems.length : (this.getText(this.selectedItems[0]) || '').toString().length;
+      var value = this.multiple ? this.selectedItems : (this.getText(this.selectedItems[0]) || '').toString();
+
+      if (typeof this.counterValue === 'function') {
+        return this.counterValue(value);
+      }
+
+      return value.length;
     },
     directives: function directives() {
       var _this = this;
@@ -23145,21 +23176,22 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_14__["default"])(_
     genChipSelection: function genChipSelection(item, index) {
       var _this = this;
 
-      var isDisabled = !this.isInteractive || this.getDisabled(item);
+      var isDisabled = this.isDisabled || this.getDisabled(item);
+      var isInteractive = !isDisabled && this.isInteractive;
       return this.$createElement(_VChip__WEBPACK_IMPORTED_MODULE_2__["default"], {
         staticClass: 'v-chip--select',
         attrs: {
           tabindex: -1
         },
         props: {
-          close: this.deletableChips && !isDisabled,
+          close: this.deletableChips && isInteractive,
           disabled: isDisabled,
           inputValue: index === this.selectedIndex,
           small: this.smallChips
         },
         on: {
           click: function click(e) {
-            if (isDisabled) return;
+            if (!isInteractive) return;
             e.stopPropagation();
             _this.selectedIndex = index;
           },
@@ -23172,7 +23204,7 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_14__["default"])(_
     },
     genCommaSelection: function genCommaSelection(item, index, last) {
       var color = index === this.selectedIndex && this.computedColor;
-      var isDisabled = !this.isInteractive || this.getDisabled(item);
+      var isDisabled = this.isDisabled || this.getDisabled(item);
       return this.$createElement('div', this.setTextColor(color, {
         staticClass: 'v-select__selection v-select__selection--comma',
         class: {
@@ -23226,7 +23258,8 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_14__["default"])(_
           type: 'text',
           'aria-readonly': String(this.isReadonly),
           'aria-activedescendant': Object(_util_helpers__WEBPACK_IMPORTED_MODULE_12__["getObjectValueByPath"])(this.$refs.menu, 'activeTile.id'),
-          autocomplete: Object(_util_helpers__WEBPACK_IMPORTED_MODULE_12__["getObjectValueByPath"])(input.data, 'attrs.autocomplete', 'off')
+          autocomplete: Object(_util_helpers__WEBPACK_IMPORTED_MODULE_12__["getObjectValueByPath"])(input.data, 'attrs.autocomplete', 'off'),
+          placeholder: !this.isDirty && (this.isFocused || !this.hasLabel) ? this.placeholder : undefined
         },
         on: {
           keypress: this.onKeyPress
@@ -23530,6 +23563,8 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_14__["default"])(_
       }
     },
     onUpDown: function onUpDown(e) {
+      var _this = this;
+
       var menu = this.$refs.menu;
       if (!menu) return;
       e.preventDefault(); // Multiple selects do not cycle their value
@@ -23543,6 +23578,7 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_14__["default"])(_
       menu.isBooted = true;
       window.requestAnimationFrame(function () {
         menu.getTiles();
+        if (!menu.hasClickableTiles) return _this.activateMenu();
 
         switch (keyCode) {
           case _util_helpers__WEBPACK_IMPORTED_MODULE_12__["keyCodes"].up:
@@ -23562,7 +23598,7 @@ var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_14__["default"])(_
             break;
         }
 
-        menu.activeTile && menu.activeTile.click();
+        _this.selectItem(_this.allItems[_this.getMenuIndex()]);
       });
     },
     selectItem: function selectItem(item) {
@@ -23777,7 +23813,8 @@ var __assign = undefined && undefined.__assign || function () {
       return this.$createElement(_VList__WEBPACK_IMPORTED_MODULE_3__["VListItemAction"], [this.$createElement(_VCheckbox_VSimpleCheckbox__WEBPACK_IMPORTED_MODULE_0__["default"], {
         props: {
           color: this.color,
-          value: inputValue
+          value: inputValue,
+          ripple: false
         },
         on: {
           input: function input() {
@@ -24432,6 +24469,8 @@ var BaseSlideGroup = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_7__["default"]
       isOverflowing: false,
       resizeTimeout: 0,
       startX: 0,
+      isSwipingHorizontal: false,
+      isSwiping: false,
       scrollOffset: 0,
       widths: {
         content: 0,
@@ -24440,6 +24479,9 @@ var BaseSlideGroup = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_7__["default"]
     };
   },
   computed: {
+    canTouch: function canTouch() {
+      return typeof window !== 'undefined';
+    },
     __cachedNext: function __cachedNext() {
       return this.genTransition('next');
     },
@@ -24624,9 +24666,26 @@ var BaseSlideGroup = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_7__["default"]
       content.style.setProperty('willChange', 'transform');
     },
     onTouchMove: function onTouchMove(e) {
-      this.scrollOffset = this.startX - e.touchmoveX;
+      if (!this.canTouch) return;
+
+      if (!this.isSwiping) {
+        // only calculate disableSwipeHorizontal during the first onTouchMove invoke
+        // in order to ensure disableSwipeHorizontal value is consistent between onTouchStart and onTouchEnd
+        var diffX = e.touchmoveX - e.touchstartX;
+        var diffY = e.touchmoveY - e.touchstartY;
+        this.isSwipingHorizontal = Math.abs(diffX) > Math.abs(diffY);
+        this.isSwiping = true;
+      }
+
+      if (this.isSwipingHorizontal) {
+        // sliding horizontally
+        this.scrollOffset = this.startX - e.touchmoveX; // temporarily disable window vertical scrolling
+
+        document.documentElement.style.overflowY = 'hidden';
+      }
     },
     onTouchEnd: function onTouchEnd() {
+      if (!this.canTouch) return;
       var _a = this.$refs,
           content = _a.content,
           wrapper = _a.wrapper;
@@ -24649,6 +24708,10 @@ var BaseSlideGroup = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_7__["default"]
           this.scrollOffset = maxScrollOffset;
         }
       }
+
+      this.isSwiping = false; // rollback whole page scrolling to default
+
+      document.documentElement.style.removeProperty('overflow-y');
     },
     overflowCheck: function overflowCheck(e, fn) {
       e.stopPropagation();
@@ -24731,8 +24794,11 @@ var BaseSlideGroup = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_7__["default"]
         _this.widths = {
           content: content ? content.clientWidth : 0,
           wrapper: wrapper ? wrapper.clientWidth : 0
-        };
-        _this.isOverflowing = _this.widths.wrapper < _this.widths.content;
+        }; // https://github.com/vuetifyjs/vuetify/issues/13212
+        // We add +1 to the wrappers width to prevent an issue where the `clientWidth`
+        // gets calculated wrongly by the browser if using a different zoom-level.
+
+        _this.isOverflowing = _this.widths.wrapper + 1 < _this.widths.content;
 
         _this.scrollIntoView();
       });
@@ -24923,7 +24989,8 @@ var __assign = undefined && undefined.__assign || function () {
     return {
       app: null,
       oldValue: null,
-      keyPressed: 0,
+      thumbPressed: false,
+      mouseTimeout: -1,
       isFocused: false,
       isActive: false,
       noClick: false
@@ -24953,7 +25020,7 @@ var __assign = undefined && undefined.__assign || function () {
       }
     },
     trackTransition: function trackTransition() {
-      return this.keyPressed >= 2 ? 'none' : '';
+      return this.thumbPressed ? this.showTicks || this.stepNumeric ? '0.1s cubic-bezier(0.25, 0.8, 0.5, 1)' : 'none' : '';
     },
     minValue: function minValue() {
       return parseFloat(this.min);
@@ -25066,12 +25133,13 @@ var __assign = undefined && undefined.__assign || function () {
         }],
         on: {
           click: this.onSliderClick,
-          mousedown: this.onSliderMouseDown
+          mousedown: this.onSliderMouseDown,
+          touchstart: this.onSliderMouseDown
         }
       }, this.genChildren());
     },
     genChildren: function genChildren() {
-      return [this.genInput(), this.genTrackContainer(), this.genSteps(), this.genThumbContainer(this.internalValue, this.inputWidth, this.isActive, this.isFocused, this.onSliderMouseDown, this.onFocus, this.onBlur)];
+      return [this.genInput(), this.genTrackContainer(), this.genSteps(), this.genThumbContainer(this.internalValue, this.inputWidth, this.isActive, this.isFocused, this.onFocus, this.onBlur)];
     },
     genInput: function genInput() {
       return this.$createElement('input', {
@@ -25138,7 +25206,7 @@ var __assign = undefined && undefined.__assign || function () {
         }
       }, ticks);
     },
-    genThumbContainer: function genThumbContainer(value, valueWidth, isActive, isFocused, onDrag, onFocus, onBlur, ref) {
+    genThumbContainer: function genThumbContainer(value, valueWidth, isActive, isFocused, onFocus, onBlur, ref) {
       if (ref === void 0) {
         ref = 'thumb';
       }
@@ -25169,10 +25237,7 @@ var __assign = undefined && undefined.__assign || function () {
         on: {
           focus: onFocus,
           blur: onBlur,
-          keydown: this.onKeyDown,
-          keyup: this.onKeyUp,
-          touchstart: onDrag,
-          mousedown: onDrag
+          keydown: this.onKeyDown
         }
       }), children);
     },
@@ -25219,9 +25284,12 @@ var __assign = undefined && undefined.__assign || function () {
       }, _a[direction] = value + "%", _a;
     },
     onSliderMouseDown: function onSliderMouseDown(e) {
+      var _this = this;
+
+      var _a;
+
       e.preventDefault();
       this.oldValue = this.internalValue;
-      this.keyPressed = 2;
       this.isActive = true;
       var mouseUpOptions = _util_helpers__WEBPACK_IMPORTED_MODULE_6__["passiveSupported"] ? {
         passive: true,
@@ -25231,20 +25299,25 @@ var __assign = undefined && undefined.__assign || function () {
         passive: true
       } : false;
 
-      if ('touches' in e) {
-        this.app.addEventListener('touchmove', this.onMouseMove, mouseMoveOptions);
-        Object(_util_helpers__WEBPACK_IMPORTED_MODULE_6__["addOnceEventListener"])(this.app, 'touchend', this.onSliderMouseUp, mouseUpOptions);
+      if ((_a = e.target) === null || _a === void 0 ? void 0 : _a.matches('.v-slider__thumb-container, .v-slider__thumb-container *')) {
+        this.thumbPressed = true;
       } else {
-        this.onMouseMove(e);
-        this.app.addEventListener('mousemove', this.onMouseMove, mouseMoveOptions);
-        Object(_util_helpers__WEBPACK_IMPORTED_MODULE_6__["addOnceEventListener"])(this.app, 'mouseup', this.onSliderMouseUp, mouseUpOptions);
+        window.clearTimeout(this.mouseTimeout);
+        this.mouseTimeout = window.setTimeout(function () {
+          _this.thumbPressed = true;
+        }, 300);
       }
 
+      var isTouchEvent = 'touches' in e;
+      this.onMouseMove(e);
+      this.app.addEventListener(isTouchEvent ? 'touchmove' : 'mousemove', this.onMouseMove, mouseMoveOptions);
+      Object(_util_helpers__WEBPACK_IMPORTED_MODULE_6__["addOnceEventListener"])(this.app, isTouchEvent ? 'touchend' : 'mouseup', this.onSliderMouseUp, mouseUpOptions);
       this.$emit('start', this.internalValue);
     },
     onSliderMouseUp: function onSliderMouseUp(e) {
       e.stopPropagation();
-      this.keyPressed = 0;
+      window.clearTimeout(this.mouseTimeout);
+      this.thumbPressed = false;
       var mouseMoveOptions = _util_helpers__WEBPACK_IMPORTED_MODULE_6__["passiveSupported"] ? {
         passive: true
       } : false;
@@ -25261,8 +25334,11 @@ var __assign = undefined && undefined.__assign || function () {
       this.isActive = false;
     },
     onMouseMove: function onMouseMove(e) {
-      var value = this.parseMouseMove(e).value;
-      this.internalValue = value;
+      if (e.type === 'mousemove') {
+        this.thumbPressed = true;
+      }
+
+      this.internalValue = this.parseMouseMove(e);
     },
     onKeyDown: function onKeyDown(e) {
       if (!this.isInteractive) return;
@@ -25270,9 +25346,6 @@ var __assign = undefined && undefined.__assign || function () {
       if (value == null || value < this.minValue || value > this.maxValue) return;
       this.internalValue = value;
       this.$emit('change', value);
-    },
-    onKeyUp: function onKeyUp() {
-      this.keyPressed = 0;
     },
     onSliderClick: function onSliderClick(e) {
       if (this.noClick) {
@@ -25310,12 +25383,7 @@ var __assign = undefined && undefined.__assign || function () {
       var clickPos = Math.min(Math.max((clickOffset - trackStart) / trackLength, 0), 1) || 0;
       if (this.vertical) clickPos = 1 - clickPos;
       if (this.$vuetify.rtl) clickPos = 1 - clickPos;
-      var isInsideTrack = clickOffset >= trackStart && clickOffset <= trackStart + trackLength;
-      var value = parseFloat(this.min) + clickPos * (this.maxValue - this.minValue);
-      return {
-        value: value,
-        isInsideTrack: isInsideTrack
-      };
+      return parseFloat(this.min) + clickPos * (this.maxValue - this.minValue);
     },
     parseKeyDown: function parseKeyDown(e, value) {
       if (!this.isInteractive) return;
@@ -25333,7 +25401,6 @@ var __assign = undefined && undefined.__assign || function () {
       var steps = (this.maxValue - this.minValue) / step;
 
       if ([left, right, down, up].includes(e.keyCode)) {
-        this.keyPressed += 1;
         var increase = this.$vuetify.rtl ? [left, up] : [right, up];
         var direction = increase.includes(e.keyCode) ? 1 : -1;
         var multiplier = e.shiftKey ? 3 : e.ctrlKey ? 2 : 1;
@@ -25553,6 +25620,7 @@ __webpack_require__.r(__webpack_exports__);
       var data = setColor(this.color, {
         staticClass: 'v-snack__wrapper',
         class: _VSheet_VSheet__WEBPACK_IMPORTED_MODULE_1__["default"].options.computed.classes.call(this),
+        style: _VSheet_VSheet__WEBPACK_IMPORTED_MODULE_1__["default"].options.computed.styles.call(this),
         directives: [{
           name: 'show',
           value: this.isActive
@@ -27994,9 +28062,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _mixins_validatable__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../mixins/validatable */ "./src/mixins/validatable/index.ts");
 /* harmony import */ var _directives_resize__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../directives/resize */ "./src/directives/resize/index.ts");
 /* harmony import */ var _directives_ripple__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../directives/ripple */ "./src/directives/ripple/index.ts");
-/* harmony import */ var _util_helpers__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../../util/helpers */ "./src/util/helpers.ts");
-/* harmony import */ var _util_console__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../../util/console */ "./src/util/console.ts");
-/* harmony import */ var _util_mixins__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../../util/mixins */ "./src/util/mixins.ts");
+/* harmony import */ var _util_dom__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../../util/dom */ "./src/util/dom.ts");
+/* harmony import */ var _util_helpers__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../../util/helpers */ "./src/util/helpers.ts");
+/* harmony import */ var _util_console__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../../util/console */ "./src/util/console.ts");
+/* harmony import */ var _util_mixins__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../../util/mixins */ "./src/util/mixins.ts");
 var __assign = undefined && undefined.__assign || function () {
   __assign = Object.assign || function (t) {
     for (var s, i = 1, n = arguments.length; i < n; i++) {
@@ -28064,10 +28133,11 @@ var __spread = undefined && undefined.__spread || function () {
  // Utilities
 
 
+
  // Types
 
 
-var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_11__["default"])(_VInput__WEBPACK_IMPORTED_MODULE_1__["default"], Object(_mixins_intersectable__WEBPACK_IMPORTED_MODULE_4__["default"])({
+var baseMixins = Object(_util_mixins__WEBPACK_IMPORTED_MODULE_12__["default"])(_VInput__WEBPACK_IMPORTED_MODULE_1__["default"], Object(_mixins_intersectable__WEBPACK_IMPORTED_MODULE_4__["default"])({
   onVisible: ['onResize', 'tryAutofocus']
 }), _mixins_loadable__WEBPACK_IMPORTED_MODULE_5__["default"]);
 var dirtyTypes = ['color', 'file', 'time', 'date', 'datetime-local', 'week', 'month'];
@@ -28221,19 +28291,19 @@ var dirtyTypes = ['color', 'file', 'time', 'date', 'datetime-local', 'week', 'mo
   created: function created() {
     /* istanbul ignore next */
     if (this.$attrs.hasOwnProperty('box')) {
-      Object(_util_console__WEBPACK_IMPORTED_MODULE_10__["breaking"])('box', 'filled', this);
+      Object(_util_console__WEBPACK_IMPORTED_MODULE_11__["breaking"])('box', 'filled', this);
     }
     /* istanbul ignore next */
 
 
     if (this.$attrs.hasOwnProperty('browser-autocomplete')) {
-      Object(_util_console__WEBPACK_IMPORTED_MODULE_10__["breaking"])('browser-autocomplete', 'autocomplete', this);
+      Object(_util_console__WEBPACK_IMPORTED_MODULE_11__["breaking"])('browser-autocomplete', 'autocomplete', this);
     }
     /* istanbul ignore if */
 
 
     if (this.shaped && !(this.filled || this.outlined || this.isSolo)) {
-      Object(_util_console__WEBPACK_IMPORTED_MODULE_10__["consoleWarn"])('shaped should be used with either filled or outlined', this);
+      Object(_util_console__WEBPACK_IMPORTED_MODULE_11__["consoleWarn"])('shaped should be used with either filled or outlined', this);
     }
   },
   mounted: function mounted() {
@@ -28383,7 +28453,7 @@ var dirtyTypes = ['color', 'file', 'time', 'date', 'datetime-local', 'week', 'mo
       });
       return this.$createElement('legend', {
         style: {
-          width: !this.isSingle ? Object(_util_helpers__WEBPACK_IMPORTED_MODULE_9__["convertToUnit"])(width) : undefined
+          width: !this.isSingle ? Object(_util_helpers__WEBPACK_IMPORTED_MODULE_10__["convertToUnit"])(width) : undefined
         }
       }, [span]);
     },
@@ -28453,8 +28523,10 @@ var dirtyTypes = ['color', 'file', 'time', 'date', 'datetime-local', 'week', 'mo
     },
     onFocus: function onFocus(e) {
       if (!this.$refs.input) return;
+      var root = Object(_util_dom__WEBPACK_IMPORTED_MODULE_9__["attachedRoot"])(this.$el);
+      if (!root) return;
 
-      if (document.activeElement !== this.$refs.input) {
+      if (root.activeElement !== this.$refs.input) {
         return this.$refs.input.focus();
       }
 
@@ -28469,7 +28541,7 @@ var dirtyTypes = ['color', 'file', 'time', 'date', 'datetime-local', 'week', 'mo
       this.badInput = target.validity && target.validity.badInput;
     },
     onKeyDown: function onKeyDown(e) {
-      if (e.keyCode === _util_helpers__WEBPACK_IMPORTED_MODULE_9__["keyCodes"].enter) this.$emit('change', this.internalValue);
+      if (e.keyCode === _util_helpers__WEBPACK_IMPORTED_MODULE_10__["keyCodes"].enter) this.$emit('change', this.internalValue);
       this.$emit('keydown', e);
     },
     onMouseDown: function onMouseDown(e) {
@@ -28498,7 +28570,9 @@ var dirtyTypes = ['color', 'file', 'time', 'date', 'datetime-local', 'week', 'mo
       this.prependWidth = this.$refs['prepend-inner'].offsetWidth;
     },
     tryAutofocus: function tryAutofocus() {
-      if (!this.autofocus || typeof document === 'undefined' || !this.$refs.input || document.activeElement === this.$refs.input) return false;
+      if (!this.autofocus || typeof document === 'undefined' || !this.$refs.input) return false;
+      var root = Object(_util_dom__WEBPACK_IMPORTED_MODULE_9__["attachedRoot"])(this.$el);
+      if (!root || root.activeElement === this.$refs.input) return false;
       this.$refs.input.focus();
       return true;
     },
@@ -33258,6 +33332,7 @@ var __spread = undefined && undefined.__spread || function () {
 
 
 
+var rippleStop = Symbol('rippleStop');
 var DELAY_RIPPLE = 80;
 
 function transform(el, value) {
@@ -33402,7 +33477,9 @@ function isRippleEnabled(value) {
 function rippleShow(e) {
   var value = {};
   var element = e.currentTarget;
-  if (!element || !element._ripple || element._ripple.touched) return;
+  if (!element || !element._ripple || element._ripple.touched || e[rippleStop]) return; // Don't allow the event to trigger ripples on any other elements
+
+  e[rippleStop] = true;
 
   if (isTouchEvent(e)) {
     element._ripple.touched = true;
@@ -33491,6 +33568,13 @@ function keyboardRippleHide(e) {
   rippleHide(e);
 }
 
+function focusRippleHide(e) {
+  if (keyboardRipple === true) {
+    keyboardRipple = false;
+    rippleHide(e);
+  }
+}
+
 function updateRipple(el, binding, wasEnabled) {
   var enabled = isRippleEnabled(binding.value);
 
@@ -33529,7 +33613,8 @@ function updateRipple(el, binding, wasEnabled) {
     el.addEventListener('mouseup', rippleHide);
     el.addEventListener('mouseleave', rippleHide);
     el.addEventListener('keydown', keyboardRippleShow);
-    el.addEventListener('keyup', keyboardRippleHide); // Anchor tags can be dragged, causes other hides to fail - #1537
+    el.addEventListener('keyup', keyboardRippleHide);
+    el.addEventListener('blur', focusRippleHide); // Anchor tags can be dragged, causes other hides to fail - #1537
 
     el.addEventListener('dragstart', rippleHide, {
       passive: true
@@ -33550,6 +33635,7 @@ function removeListeners(el) {
   el.removeEventListener('keydown', keyboardRippleShow);
   el.removeEventListener('keyup', keyboardRippleHide);
   el.removeEventListener('dragstart', rippleHide);
+  el.removeEventListener('blur', focusRippleHide);
 }
 
 function directive(el, binding, node) {
@@ -33829,7 +33915,7 @@ function () {
 
   Vuetify.install = _install__WEBPACK_IMPORTED_MODULE_0__["install"];
   Vuetify.installed = false;
-  Vuetify.version = "2.4.4";
+  Vuetify.version = "2.4.11";
   Vuetify.config = {
     silent: false
   };
@@ -35839,7 +35925,7 @@ __webpack_require__.r(__webpack_exports__);
   },
   rating: {
     ariaLabel: {
-      icon: 'Rating {0} of {1}'
+      icon: '評価 {1} のうち {0}'
     }
   }
 });
@@ -36424,53 +36510,53 @@ __webpack_require__.r(__webpack_exports__);
 __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = ({
   badge: 'Insignă',
-  close: 'Close',
+  close: 'Închideți',
   dataIterator: {
-    noResultsText: 'Nu au fost găsite înregistrări care să se potrivească',
-    loadingText: 'Loading item...'
+    noResultsText: 'Nu s-au găsit înregistrări corespunzătoare',
+    loadingText: 'Se încarcă articolele...'
   },
   dataTable: {
     itemsPerPageText: 'Rânduri pe pagină:',
     ariaLabel: {
-      sortDescending: 'Sorted descending.',
-      sortAscending: 'Sorted ascending.',
-      sortNone: 'Not sorted.',
-      activateNone: 'Activate to remove sorting.',
-      activateDescending: 'Activate to sort descending.',
-      activateAscending: 'Activate to sort ascending.'
+      sortDescending: 'Sortate descendent.',
+      sortAscending: 'Sortate ascendent.',
+      sortNone: 'Nesortate.',
+      activateNone: 'Activați pentru a elimina sortarea.',
+      activateDescending: 'Activați pentru a sorta descendent.',
+      activateAscending: 'Activați pentru a sorta ascendent.'
     },
-    sortBy: 'Sort by'
+    sortBy: 'Sortați după'
   },
   dataFooter: {
     itemsPerPageText: 'Articole pe pagină:',
     itemsPerPageAll: 'Toate',
     nextPage: 'Pagina următoare',
     prevPage: 'Pagina anterioară',
-    firstPage: 'Pagina prima',
-    lastPage: 'Pagina ultima',
+    firstPage: 'Prima pagină',
+    lastPage: 'Ultima pagină',
     pageText: '{0}-{1} din {2}'
   },
   datePicker: {
     itemsSelected: '{0} selectate',
-    nextMonthAriaLabel: 'Luna viitoare',
-    nextYearAriaLabel: 'Anul urmator',
-    prevMonthAriaLabel: 'Luna trecută',
-    prevYearAriaLabel: 'Anul precedent'
+    nextMonthAriaLabel: 'Luna următoare',
+    nextYearAriaLabel: 'Anul următor',
+    prevMonthAriaLabel: 'Luna anterioară',
+    prevYearAriaLabel: 'Anul anterior'
   },
   noDataText: 'Nu există date disponibile',
   carousel: {
-    prev: 'Anterior vizual',
-    next: 'Următorul vizual',
+    prev: 'Grafica anterioară',
+    next: 'Grafica următoare',
     ariaLabel: {
-      delimiter: 'Carousel slide {0} of {1}'
+      delimiter: 'Slide carusel {0} din {1}'
     }
   },
   calendar: {
-    moreEvents: '{0} mai mult'
+    moreEvents: 'încă {0}'
   },
   fileInput: {
-    counter: '{0} files',
-    counterSize: '{0} files ({1} in total)'
+    counter: '{0} fișiere',
+    counterSize: '{0} fișiere ({1} în total)'
   },
   timePicker: {
     am: 'AM',
@@ -36481,13 +36567,13 @@ __webpack_require__.r(__webpack_exports__);
       wrapper: 'Navigare prin paginare',
       next: 'Pagina următoare',
       previous: 'Pagina anterioară',
-      page: 'Mergi la pagina {0}',
+      page: 'Mergeți la pagina {0}',
       currentPage: 'Pagina curentă, pagina {0}'
     }
   },
   rating: {
     ariaLabel: {
-      icon: 'Rating {0} of {1}'
+      icon: 'Rating de {0} din {1}'
     }
   }
 });
@@ -36649,7 +36735,7 @@ __webpack_require__.r(__webpack_exports__);
   },
   rating: {
     ariaLabel: {
-      icon: 'Rating {0} of {1}'
+      icon: 'Hodnotenie {0} z {1}'
     }
   }
 });
@@ -38232,6 +38318,8 @@ function validateAttachTarget(val) {
     } catch (e) {
       console.log(e);
     }
+    /* eslint-disable-line no-console */
+
   },
   methods: {
     getScopeIdAttrs: function getScopeIdAttrs() {
@@ -43557,6 +43645,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "breaking", function() { return breaking; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "removed", function() { return removed; });
 /* harmony import */ var _framework__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../framework */ "./src/framework.ts");
+/* eslint-disable no-console */
 
 
 function createMessage(message, vm, parent) {
@@ -43768,6 +43857,44 @@ function dedupeModelListeners(data) {
 
 /***/ }),
 
+/***/ "./src/util/dom.ts":
+/*!*************************!*\
+  !*** ./src/util/dom.ts ***!
+  \*************************/
+/*! exports provided: attachedRoot */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "attachedRoot", function() { return attachedRoot; });
+/**
+ * Returns:
+ *  - 'null' if the node is not attached to the DOM
+ *  - the root node (HTMLDocument | ShadowRoot) otherwise
+ */
+function attachedRoot(node) {
+  /* istanbul ignore next */
+  if (typeof node.getRootNode !== 'function') {
+    // Shadow DOM not supported (IE11), lets find the root of this node
+    while (node.parentNode) {
+      node = node.parentNode;
+    } // The root parent is the document if the node is attached to the DOM
+
+
+    if (node !== document) return null;
+    return document;
+  }
+
+  var root = node.getRootNode(); // The composed root node is the document if the node is attached to the DOM
+
+  if (root !== document && root.getRootNode({
+    composed: true
+  }) !== document) return null;
+  return root;
+}
+
+/***/ }),
+
 /***/ "./src/util/helpers.ts":
 /*!*****************************!*\
   !*** ./src/util/helpers.ts ***!
@@ -43924,6 +44051,8 @@ try {
 } catch (e) {
   console.warn(e);
 }
+/* eslint-disable-line no-console */
+
 
 
 function addPassiveEventListener(el, event, cb, options) {

@@ -78,8 +78,7 @@ Of the **files** in the app directory, only `index.html` and `service-worker.js`
 
 * [Mime](https://github.com/broofa/mime/)
   * Rewritten as single file class
-* [Pako](https://github.com/nodeca/pako/)
-  * Only the inflator is used
+* [fflate](https://github.com/101arrowz/fflate)
 * [Workbox](https://github.com/GoogleChrome/workbox/)
 * [Conflux](https://github.com/transcend-io/conflux)
   * Only a slightly modified reader is used

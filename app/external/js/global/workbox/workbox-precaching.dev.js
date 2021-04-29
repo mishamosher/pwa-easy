@@ -21,7 +21,7 @@ this.workbox.precaching = (function (exports, assert_js, cacheNames_js, logger_j
   }
 
   try {
-    self['workbox:precaching:6.1.0'] && _();
+    self['workbox:precaching:6.1.5'] && _();
   } catch (e) {}
 
   /*
@@ -622,8 +622,7 @@ this.workbox.precaching = (function (exports, assert_js, cacheNames_js, logger_j
      * Note: this method calls `event.waitUntil()` for you, so you do not need
      * to call it yourself in your event handlers.
      *
-     * @param {Object} options
-     * @param {Event} options.event The install event.
+     * @param {ExtendableEvent} event
      * @return {Promise<module:workbox-precaching.InstallResult>}
      */
 
@@ -675,7 +674,7 @@ this.workbox.precaching = (function (exports, assert_js, cacheNames_js, logger_j
      * Note: this method calls `event.waitUntil()` for you, so you do not need
      * to call it yourself in your event handlers.
      *
-     * @param {ExtendableEvent}
+     * @param {ExtendableEvent} event
      * @return {Promise<module:workbox-precaching.CleanupResult>}
      */
 

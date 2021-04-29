@@ -1,5 +1,5 @@
 try {
-  self['workbox:window:6.1.0'] && _();
+  self['workbox:window:6.1.5'] && _();
 } catch (e) {}
 
 /*
@@ -37,7 +37,7 @@ function messageSW(sw, data) {
 }
 
 try {
-  self['workbox:core:6.1.0'] && _();
+  self['workbox:core:6.1.5'] && _();
 } catch (e) {}
 
 /*
@@ -92,7 +92,7 @@ function dontWaitFor(promise) {
   license that can be found in the LICENSE file or at
   https://opensource.org/licenses/MIT.
 */
-const logger =  (() => {
+const logger = (() => {
   // Don't overwrite this value if it's already set.
   // See https://github.com/GoogleChrome/workbox/pull/2284#issuecomment-560470923
   if (!('__WB_DISABLE_DEV_LOGS' in self)) {
@@ -490,14 +490,19 @@ class Workbox extends WorkboxEventTarget {
 
     this._onControllerChange = originalEvent => {
       const sw = this._sw;
+      const isExternal = sw !== navigator.serviceWorker.controller; // Unconditionally dispatch the controlling event, with isExternal set
+      // to distinguish between controller changes due to the initial registration
+      // vs. an update-check or other tab's registration.
+      // See https://github.com/GoogleChrome/workbox/issues/2786
 
-      if (sw === navigator.serviceWorker.controller) {
-        this.dispatchEvent(new WorkboxEvent('controlling', {
-          sw,
-          originalEvent,
-          isUpdate: this._isUpdate
-        }));
+      this.dispatchEvent(new WorkboxEvent('controlling', {
+        isExternal,
+        originalEvent,
+        sw,
+        isUpdate: this._isUpdate
+      }));
 
+      if (!isExternal) {
         {
           logger.log('Registered service worker now controlling this page.');
         }
@@ -879,6 +884,8 @@ class Workbox extends WorkboxEventTarget {
  *     event.
  * @property {boolean|undefined} isUpdate True if a service worker was already
  *     controlling when this service worker was registered.
+ * @property {boolean|undefined} isExternal True if this event is associated
+ *     with an [external service worker]{@link https://developers.google.com/web/tools/workbox/modules/workbox-window#when_an_unexpected_version_of_the_service_worker_is_found}.
  * @property {string} type `controlling`.
  * @property {Workbox} target The `Workbox` instance.
  */

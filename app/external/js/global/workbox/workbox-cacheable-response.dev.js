@@ -3,7 +3,7 @@ this.workbox.cacheableResponse = (function (exports, assert_js, WorkboxError_js,
     'use strict';
 
     try {
-      self['workbox:cacheable-response:6.1.0'] && _();
+      self['workbox:cacheable-response:6.1.5'] && _();
     } catch (e) {}
 
     /*
