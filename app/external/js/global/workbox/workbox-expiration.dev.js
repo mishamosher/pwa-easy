@@ -3,7 +3,7 @@ this.workbox.expiration = (function (exports, assert_js, dontWaitFor_js, logger_
     'use strict';
 
     try {
-      self['workbox:expiration:6.1.0'] && _();
+      self['workbox:expiration:6.1.5'] && _();
     } catch (e) {}
 
     /*

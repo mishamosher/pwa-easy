@@ -3,7 +3,7 @@ this.workbox.backgroundSync = (function (exports, WorkboxError_js, logger_js, as
     'use strict';
 
     try {
-      self['workbox:background-sync:6.1.0'] && _();
+      self['workbox:background-sync:6.1.5'] && _();
     } catch (e) {}
 
     /*

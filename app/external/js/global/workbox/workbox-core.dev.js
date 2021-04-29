@@ -3,7 +3,7 @@ this.workbox.core = (function (exports) {
     'use strict';
 
     try {
-      self['workbox:core:6.1.0'] && _();
+      self['workbox:core:6.1.5'] && _();
     } catch (e) {}
 
     /*
@@ -12,7 +12,7 @@ this.workbox.core = (function (exports) {
       license that can be found in the LICENSE file or at
       https://opensource.org/licenses/MIT.
     */
-    const logger =  (() => {
+    const logger = (() => {
       // Don't overwrite this value if it's already set.
       // See https://github.com/GoogleChrome/workbox/pull/2284#issuecomment-560470923
       if (!('__WB_DISABLE_DEV_LOGS' in self)) {
@@ -367,7 +367,7 @@ this.workbox.core = (function (exports) {
       return message(details);
     };
 
-    const messageGenerator =  generatorFunction;
+    const messageGenerator = generatorFunction;
 
     /*
       Copyright 2018 Google LLC
@@ -468,7 +468,7 @@ this.workbox.core = (function (exports) {
       }
     };
 
-    const finalAssertExports =  {
+    const finalAssertExports = {
       hasMethod,
       isArray,
       isInstance,
@@ -543,7 +543,7 @@ this.workbox.core = (function (exports) {
       }
     };
 
-    const cacheNames = {
+    const cacheNames$1 = {
       updateDetails: details => {
         eachCacheNameDetail(key => {
           if (typeof details[key] === 'string') {
@@ -641,7 +641,7 @@ this.workbox.core = (function (exports) {
       license that can be found in the LICENSE file or at
       https://opensource.org/licenses/MIT.
     */
-    let supportStatus;
+    let supportStatus$1;
     /**
      * A utility function that determines whether the current browser supports
      * constructing a [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream/ReadableStream)
@@ -654,20 +654,20 @@ this.workbox.core = (function (exports) {
      */
 
     function canConstructReadableStream() {
-      if (supportStatus === undefined) {
+      if (supportStatus$1 === undefined) {
         // See https://github.com/GoogleChrome/workbox/issues/1473
         try {
           new ReadableStream({
             start() {}
 
           });
-          supportStatus = true;
+          supportStatus$1 = true;
         } catch (error) {
-          supportStatus = false;
+          supportStatus$1 = false;
         }
       }
 
-      return supportStatus;
+      return supportStatus$1;
     }
 
     /*
@@ -677,7 +677,7 @@ this.workbox.core = (function (exports) {
       license that can be found in the LICENSE file or at
       https://opensource.org/licenses/MIT.
     */
-    let supportStatus$1;
+    let supportStatus;
     /**
      * A utility function that determines whether the current browser supports
      * constructing a new `Response` from a `response.body` stream.
@@ -689,22 +689,22 @@ this.workbox.core = (function (exports) {
      */
 
     function canConstructResponseFromBodyStream() {
-      if (supportStatus$1 === undefined) {
+      if (supportStatus === undefined) {
         const testResponse = new Response('');
 
         if ('body' in testResponse) {
           try {
             new Response(testResponse.body);
-            supportStatus$1 = true;
+            supportStatus = true;
           } catch (error) {
-            supportStatus$1 = false;
+            supportStatus = false;
           }
         }
 
-        supportStatus$1 = false;
+        supportStatus = false;
       }
 
-      return supportStatus$1;
+      return supportStatus;
     }
 
     /*
@@ -1240,7 +1240,7 @@ this.workbox.core = (function (exports) {
         __proto__: null,
         assert: finalAssertExports,
         cacheMatchIgnoreParams: cacheMatchIgnoreParams,
-        cacheNames: cacheNames,
+        cacheNames: cacheNames$1,
         canConstructReadableStream: canConstructReadableStream,
         canConstructResponseFromBodyStream: canConstructResponseFromBodyStream,
         dontWaitFor: dontWaitFor,
@@ -1279,25 +1279,25 @@ this.workbox.core = (function (exports) {
      * @memberof module:workbox-core
      */
 
-    const cacheNames$1 = {
+    const cacheNames = {
       get googleAnalytics() {
-        return cacheNames.getGoogleAnalyticsName();
+        return cacheNames$1.getGoogleAnalyticsName();
       },
 
       get precache() {
-        return cacheNames.getPrecacheName();
+        return cacheNames$1.getPrecacheName();
       },
 
       get prefix() {
-        return cacheNames.getPrefix();
+        return cacheNames$1.getPrefix();
       },
 
       get runtime() {
-        return cacheNames.getRuntimeName();
+        return cacheNames$1.getRuntimeName();
       },
 
       get suffix() {
-        return cacheNames.getSuffix();
+        return cacheNames$1.getSuffix();
       }
 
     };
@@ -1434,7 +1434,7 @@ this.workbox.core = (function (exports) {
         }
       }
 
-      cacheNames.updateDetails(details);
+      cacheNames$1.updateDetails(details);
     }
 
     /*
@@ -1463,7 +1463,7 @@ this.workbox.core = (function (exports) {
     }
 
     exports._private = _private;
-    exports.cacheNames = cacheNames$1;
+    exports.cacheNames = cacheNames;
     exports.clientsClaim = clientsClaim;
     exports.copyResponse = copyResponse;
     exports.registerQuotaErrorCallback = registerQuotaErrorCallback;

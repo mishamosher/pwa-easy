@@ -3,7 +3,7 @@ this.workbox.routing = (function (exports, assert_js, logger_js, WorkboxError_js
     'use strict';
 
     try {
-      self['workbox:routing:6.1.0'] && _();
+      self['workbox:routing:6.1.5'] && _();
     } catch (e) {}
 
     /*
@@ -625,6 +625,8 @@ this.workbox.routing = (function (exports, assert_js, logger_js, WorkboxError_js
        *
        * @param {Object} options
        * @param {URL} options.url
+       * @param {boolean} options.sameOrigin The result of comparing `url.origin`
+       *     against the current origin.
        * @param {Request} options.request The request to match.
        * @param {Event} options.event The corresponding event.
        * @return {Object} An object with `route` and `params` properties.
