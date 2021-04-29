@@ -41,9 +41,7 @@ class Crc32 {
   }
 }
 
-const Inflate = pako.Inflate;
-//import { Inflate } from 'pako';
-//import Crc32 from './crc.js';
+const Inflate = fflate.Inflate;
 
 const BigInt = globalThis.BigInt || globalThis.Number;
 const ERR_BAD_FORMAT = 'File format is not recognized.';
@@ -195,7 +193,6 @@ class Entry {
     let inflator;
     const onEnd = (ctrl) =>
     {
-      if (inflator && inflator.err) throw new Error(inflator.msg);
       crc.get() === self.crc32
           ? ctrl.close()
           : ctrl.error(new Error("The crc32 checksum don't match"));
@@ -219,19 +216,18 @@ class Entry {
             .getReader();
 
         if (self.compressionMethod) {
-          inflator = new Inflate({ raw: true });
-          inflator.onData = (chunk) => {
+          inflator = new Inflate();
+          inflator.ondata = (chunk) => {
             crc.append(chunk);
             ctrl.enqueue(chunk);
           };
-          inflator.onEnd = () => { onEnd(ctrl) };
         }
       },
       async pull(ctrl) {
         const v = await this.reader.read();
         if (inflator) {
-          if (v.done) inflator.push([], true);
-          else inflator.push(v.value, false);
+          if (v.done) onEnd(ctrl);
+          else inflator.push(v.value);
         } else {
           if (v.done) onEnd(ctrl);
           else {
